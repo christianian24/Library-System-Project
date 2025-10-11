@@ -8,13 +8,15 @@ package ui;
  *
  * @author Ronald
  */
-public class Student extends javax.swing.JPanel {
+public class Student extends javax.swing.JFrame {
 
     /**
      * Creates new form Student
      */
     public Student() {
         initComponents();
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null); // optional - centers window
     }
 
     /**

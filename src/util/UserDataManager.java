@@ -1,23 +1,39 @@
 package util;
 
 import java.io.*;
+import java.nio.file.*;
 import java.util.*;
 import model.User;
 
 public class UserDataManager {
+    private static final String FILE_PATH = "data/users.txt";
 
-    private static final String FILE_PATH = "Users.txt";
-
-    // Add a new user to the file
+    // Save a new user (returns false if duplicate email or number)
     public static boolean addUser(User user) {
-        if (findUser(user.getEmail(), user.getPassword()) != null) {
-            return false; // already exists
-        }
+        try {
+            File file = new File(FILE_PATH);
+            file.getParentFile().mkdirs();
+            if (!file.exists()) file.createNewFile();
 
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH, true))) {
-            writer.write(user.getFullName() + "," + user.getEmail() + "," + user.getPassword());
-            writer.newLine();
-            writer.newLine();
+            // Check for duplicates
+            List<String> lines = Files.readAllLines(file.toPath());
+            for (String line : lines) {
+                String[] parts = line.split(",");
+                if (parts.length >= 5) {
+                    String existingEmail = parts[3];
+                    String existingMobile = parts[4];
+                    if (existingEmail.equalsIgnoreCase(user.getEmail()) || existingMobile.equals(user.getMobile())) {
+                        return false; // already exists
+                    }
+                }
+            }
+
+            // Append user
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter(file, true))) {
+                bw.write(user.toCsv());
+                bw.newLine();
+            }
+
             return true;
         } catch (IOException e) {
             e.printStackTrace();
@@ -25,27 +41,27 @@ public class UserDataManager {
         }
     }
 
-    // Find user by email and password
-    public static User findUser(String email, String password) {
-        try (BufferedReader reader = new BufferedReader(new FileReader(FILE_PATH))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] data = line.split(",");
-                if (data.length == 5) {
-                    String fName = data[0];
-                    String lName = data[1];
-                    String mail = data[2];
-                    String mobile = data[3];
-                    String pass = data[4];
+    // Authenticate student (used for login)
+    public static boolean authenticateStudent(String email, String password) {
+        try {
+            File file = new File(FILE_PATH);
+            if (!file.exists()) return false;
 
-                    if (mail.equals(email) && pass.equals(password)) {
-                        return new User(fName, lName, mail, mobile, pass);
+            List<String> lines = Files.readAllLines(file.toPath());
+            for (String line : lines) {
+                String[] parts = line.split(",");
+                if (parts.length >= 6) {
+                    String role = parts[0];
+                    String e = parts[3];
+                    String p = parts[5];
+                    if (role.equalsIgnoreCase("student") && e.equalsIgnoreCase(email) && p.equals(password)) {
+                        return true;
                     }
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return null; // not found
+        return false;
     }
 }

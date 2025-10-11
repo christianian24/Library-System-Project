@@ -25,6 +25,8 @@ public class Main extends javax.swing.JFrame {
      */
     public Main() {
         initComponents();
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+
         
         FrameUtil.setupFrame(this);
         
@@ -327,41 +329,30 @@ public class Main extends javax.swing.JFrame {
     String email = txtUsername.getText().trim();
     String password = new String(txtPassword.getPassword());
 
-    // Check role
-    if (selectedRole.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "Please select Admin or Student first.", "Error", JOptionPane.ERROR_MESSAGE);
+    final String ADMIN_EMAIL = "admin";
+    final String ADMIN_PASS = "pass";
+
+    // 🔸 1. Admin login (optional)
+    if (email.equals(ADMIN_EMAIL) && password.equals(ADMIN_PASS)) {
+        util.AlertUtil.showRoundedToastTopRight(this, "Welcome Admin!", new java.awt.Color(46, 204, 113));
+        // You can open AdminJFrame here if you have one
         return;
     }
 
-    // Check fields
-    if (email.isEmpty() || password.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "Please fill in all fields.", "Error", JOptionPane.ERROR_MESSAGE);
-        return;
+    // 🔸 2. Student login
+    if (util.UserDataManager.authenticateStudent(email, password)) {
+    util.AlertUtil.showRoundedToastTopRight(this, "Login successful!", new java.awt.Color(46, 204, 113));
+
+    Student studentFrame = new Student();
+    studentFrame.setLocationRelativeTo(null); // centers window
+    new StudentFrame().setVisible(true);
+
+    this.dispose(); // close login after student window is shown
+    }
+    else {
+        util.AlertUtil.showRoundedToastTopRight(this, "Invalid credentials!", new java.awt.Color(231, 76, 60));
     }
 
-    // Find user
-    User user = UserDataManager.findUser(email, password);
-    if (user == null) {
-        JOptionPane.showMessageDialog(this, "Invalid email or password!", "Login Failed", JOptionPane.ERROR_MESSAGE);
-        return;
-    }
-
-    // Role validation
-    if (!user.getRole().equalsIgnoreCase(selectedRole)) {
-        JOptionPane.showMessageDialog(this, "Access denied. You are not authorized for this section.", "Error", JOptionPane.ERROR_MESSAGE);
-        return;
-    }
-
-    // Success
-    JOptionPane.showMessageDialog(this, "Welcome " + user.getFullName() + "!");
-    
-    if (user.getRole().equalsIgnoreCase("admin")) {
-        new Admin().setVisible(true);
-    } else {
-        new Student().setVisible(true);
-    }
-
-    dispose();
 
     }//GEN-LAST:event_LoginActionPerformed
 

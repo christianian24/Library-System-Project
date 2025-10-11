@@ -441,6 +441,7 @@ public class CreateAccount extends javax.swing.JFrame {
     String pass = new String(Password.getPassword());
     String repass = new String(Repassword.getPassword());
 
+    // 🔸 Validation checks
     if (first.isEmpty() || last.isEmpty() || email.isEmpty() || mobile.isEmpty() || pass.isEmpty() || repass.isEmpty()) {
         util.AlertUtil.showRoundedToastTopRight(this, "All fields are required!", new java.awt.Color(241, 196, 15));
         return;
@@ -456,26 +457,32 @@ public class CreateAccount extends javax.swing.JFrame {
         return;
     }
 
-    if (mobile.length() != 11) {
+    if (mobile.length() != 11 || !mobile.matches("\\d+")) {
         util.AlertUtil.showRoundedToastTopRight(this, "Mobile number must be 11 digits.", new java.awt.Color(241, 196, 15));
         return;
     }
 
-    model.User user = new model.User(first, last, email, mobile, pass);
+    // 🔸 Create a new User object
+    model.User user = new model.User("student", first, last, email, mobile, pass);
+
+    // 🔸 Save user to file (users.txt)
     boolean success = util.UserDataManager.addUser(user);
 
     if (success) {
         util.AlertUtil.showRoundedToastTopRight(this, "Account created successfully!", new java.awt.Color(46, 204, 113));
+
+        // Reset fields
         txtFirstname.setText("First name");
         Lastname.setText("Last name");
         Email.setText("Email");
         Number.setText("Mobile number");
-        Password.setText("Enter Password");
-        Repassword.setText("Confirm Password");
+        Password.setText("");
+        Repassword.setText("");
+
     } else {
         util.AlertUtil.showRoundedToastTopRight(this, "Account already exists!", new java.awt.Color(231, 76, 60));
     }
-   // TODO add your handling code here:
+
     }//GEN-LAST:event_CreateButtonActionPerformed
 
     private void BacktoLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BacktoLoginActionPerformed
