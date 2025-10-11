@@ -6,6 +6,7 @@ package ui;
 import util.FrameUtil;
 import java.awt.Color;
 import util.AlertUtil;
+import util.UserDataManager;
 /**
  *
  * @author User
@@ -229,6 +230,7 @@ public class CreateAccount extends javax.swing.JFrame {
         Repassword = new javax.swing.JPasswordField();
         BacktoLogin = new javax.swing.JToggleButton();
         jLabel3 = new javax.swing.JLabel();
+        jLabel4 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -347,7 +349,7 @@ public class CreateAccount extends javax.swing.JFrame {
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap(32, Short.MAX_VALUE)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(Icon))
                 .addGap(18, 18, 18)
@@ -373,12 +375,17 @@ public class CreateAccount extends javax.swing.JFrame {
                 .addGap(63, 63, 63))
         );
 
+        jLabel4.setIcon(new javax.swing.ImageIcon("C:\\Users\\Ronald\\Documents\\NetBeansProjects\\Library-System-Project\\src\\resources\\553574027_1727697471531176_6493368102668136107_n (1).png")); // NOI18N
+        jLabel4.setText("jLabel4");
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addContainerGap(886, Short.MAX_VALUE)
+                .addContainerGap(288, Short.MAX_VALUE)
+                .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 491, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(159, 159, 159)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                     .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 314, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -389,9 +396,15 @@ public class CreateAccount extends javax.swing.JFrame {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(71, 71, 71)
                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(110, Short.MAX_VALUE))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap(138, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel4)
+                        .addGap(301, 301, 301))))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -421,7 +434,48 @@ public class CreateAccount extends javax.swing.JFrame {
     }//GEN-LAST:event_EmailActionPerformed
 
     private void CreateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CreateButtonActionPerformed
-        // TODO add your handling code here:
+    String first = txtFirstname.getText().trim();
+    String last = Lastname.getText().trim();
+    String email = Email.getText().trim();
+    String mobile = Number.getText().trim();
+    String pass = new String(Password.getPassword());
+    String repass = new String(Repassword.getPassword());
+
+    if (first.isEmpty() || last.isEmpty() || email.isEmpty() || mobile.isEmpty() || pass.isEmpty() || repass.isEmpty()) {
+        util.AlertUtil.showRoundedToastTopRight(this, "All fields are required!", new java.awt.Color(241, 196, 15));
+        return;
+    }
+
+    if (!pass.equals(repass)) {
+        util.AlertUtil.showRoundedToastTopRight(this, "Passwords do not match!", new java.awt.Color(231, 76, 60));
+        return;
+    }
+
+    if (!email.contains("@") || !email.contains(".")) {
+        util.AlertUtil.showRoundedToastTopRight(this, "Invalid email format!", new java.awt.Color(241, 196, 15));
+        return;
+    }
+
+    if (mobile.length() != 11) {
+        util.AlertUtil.showRoundedToastTopRight(this, "Mobile number must be 11 digits.", new java.awt.Color(241, 196, 15));
+        return;
+    }
+
+    model.User user = new model.User(first, last, email, mobile, pass);
+    boolean success = util.UserDataManager.addUser(user);
+
+    if (success) {
+        util.AlertUtil.showRoundedToastTopRight(this, "Account created successfully!", new java.awt.Color(46, 204, 113));
+        txtFirstname.setText("First name");
+        Lastname.setText("Last name");
+        Email.setText("Email");
+        Number.setText("Mobile number");
+        Password.setText("Enter Password");
+        Repassword.setText("Confirm Password");
+    } else {
+        util.AlertUtil.showRoundedToastTopRight(this, "Account already exists!", new java.awt.Color(231, 76, 60));
+    }
+   // TODO add your handling code here:
     }//GEN-LAST:event_CreateButtonActionPerformed
 
     private void BacktoLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BacktoLoginActionPerformed
@@ -469,6 +523,7 @@ public class CreateAccount extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JSeparator jSeparator1;
