@@ -1,16 +1,11 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
+//@ian
+
 package ui;
 import util.FrameUtil;
 import java.awt.Color;
 import util.AlertUtil;
 import util.UserDataManager;
-/**
- *
- * @author User
- */
+
 public class CreateAccount extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(CreateAccount.class.getName());
@@ -49,7 +44,7 @@ public class CreateAccount extends javax.swing.JFrame {
                     util.AlertUtil.showRoundedToastTopRight(
                         CreateAccount.this,
                         "Please enter numbers only.",
-                        new Color(241, 196, 15) // 🔴 Red for warning
+                        new Color(132, 153, 122)
                     );
                     return;
                 }
@@ -60,7 +55,7 @@ public class CreateAccount extends javax.swing.JFrame {
                     util.AlertUtil.showRoundedToastTopRight(
                         CreateAccount.this,
                         "Mobile number must be 11 digits only.",
-                        new Color(241, 196, 15) // 🟡 Yellow for limit warning
+                        new Color(132, 153, 122) 
                     );
                 }
             }
@@ -230,6 +225,9 @@ public class CreateAccount extends javax.swing.JFrame {
         Repassword = new javax.swing.JPasswordField();
         BacktoLogin = new javax.swing.JToggleButton();
         jLabel3 = new javax.swing.JLabel();
+        jLabel7 = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
+        jLabel6 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -275,7 +273,7 @@ public class CreateAccount extends javax.swing.JFrame {
             }
         });
 
-        CreateButton.setBackground(new java.awt.Color(204, 204, 204));
+        CreateButton.setBackground(new java.awt.Color(182, 176, 159));
         CreateButton.setText("Create an Account");
         CreateButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         CreateButton.addActionListener(new java.awt.event.ActionListener() {
@@ -375,43 +373,71 @@ public class CreateAccount extends javax.swing.JFrame {
                 .addGap(63, 63, 63))
         );
 
-        jLabel4.setIcon(new javax.swing.ImageIcon("C:\\Users\\Ronald\\Documents\\NetBeansProjects\\Library-System-Project\\src\\resources\\553574027_1727697471531176_6493368102668136107_n (1).png")); // NOI18N
-        jLabel4.setText("jLabel4");
+        jLabel7.setFont(new java.awt.Font("Serif", 3, 24)); // NOI18N
+        jLabel7.setText("“Where every book finds its place.”");
+
+        jLabel5.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/archiva2.png"))); // NOI18N
+
+        jLabel6.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/fixed.png"))); // NOI18N
+        jLabel6.setText("jLabel6");
+
+        jLabel4.setFont(new java.awt.Font("Segoe UI", 2, 18)); // NOI18N
+        jLabel4.setText("Want to learn more from us? Visit Our");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addContainerGap(288, Short.MAX_VALUE)
-                .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 491, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(159, 159, 159)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(287, 287, 287)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(80, 80, 80)
+                        .addComponent(jLabel7))
+                    .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 530, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 299, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                     .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 314, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(53, 53, 53))
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(133, 133, 133)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 384, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(70, 70, 70)
+                        .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(71, 71, 71)
                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap(138, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel4)
-                        .addGap(301, 301, 301))))
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(0, 94, Short.MAX_VALUE)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addGap(270, 270, 270)
+                                .addComponent(jLabel7))
+                            .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 280, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(200, 200, 200)
+                        .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, 0)
+                        .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(14, 14, 14))))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -443,22 +469,22 @@ public class CreateAccount extends javax.swing.JFrame {
 
     // 🔸 Validation checks
     if (first.isEmpty() || last.isEmpty() || email.isEmpty() || mobile.isEmpty() || pass.isEmpty() || repass.isEmpty()) {
-        util.AlertUtil.showRoundedToastTopRight(this, "All fields are required!", new java.awt.Color(241, 196, 15));
+        util.AlertUtil.showRoundedToastTopRight(this, "All fields are required!", new java.awt.Color(132, 153, 122));
         return;
     }
 
     if (!pass.equals(repass)) {
-        util.AlertUtil.showRoundedToastTopRight(this, "Passwords do not match!", new java.awt.Color(231, 76, 60));
+        util.AlertUtil.showRoundedToastTopRight(this, "Passwords do not match!", new java.awt.Color(132, 153, 122));
         return;
     }
 
     if (!email.contains("@") || !email.contains(".")) {
-        util.AlertUtil.showRoundedToastTopRight(this, "Invalid email format!", new java.awt.Color(241, 196, 15));
+        util.AlertUtil.showRoundedToastTopRight(this, "Invalid email format!", new java.awt.Color(132, 153, 122));
         return;
     }
 
     if (mobile.length() != 11 || !mobile.matches("\\d+")) {
-        util.AlertUtil.showRoundedToastTopRight(this, "Mobile number must be 11 digits.", new java.awt.Color(241, 196, 15));
+        util.AlertUtil.showRoundedToastTopRight(this, "Mobile number must be 11 digits.", new java.awt.Color(132, 153, 122));
         return;
     }
 
@@ -469,7 +495,7 @@ public class CreateAccount extends javax.swing.JFrame {
     boolean success = util.UserDataManager.addUser(user);
 
     if (success) {
-        util.AlertUtil.showRoundedToastTopRight(this, "Account created successfully!", new java.awt.Color(46, 204, 113));
+        util.AlertUtil.showRoundedToastTopRight(this, "Account created successfully!", new java.awt.Color(144, 166, 133));
 
         // Reset fields
         txtFirstname.setText("First name");
@@ -480,7 +506,7 @@ public class CreateAccount extends javax.swing.JFrame {
         Repassword.setText("");
 
     } else {
-        util.AlertUtil.showRoundedToastTopRight(this, "Account already exists!", new java.awt.Color(231, 76, 60));
+        util.AlertUtil.showRoundedToastTopRight(this, "Account already exists!", new java.awt.Color(132, 153, 122));
     }
 
     }//GEN-LAST:event_CreateButtonActionPerformed
@@ -531,6 +557,9 @@ public class CreateAccount extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JSeparator jSeparator1;

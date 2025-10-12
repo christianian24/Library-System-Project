@@ -1,21 +1,31 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+//@ian
+
 package util;
 
 import javax.swing.*;
 import java.awt.*;
-/**
- *
- * @Cabilen
- */
+
 public class AlertUtil {
 
-    public static void showRoundedToastTopRight(Component parent, String message, Color bgColor) {
-        JWindow toast = new JWindow();
+    // 🧠 Track the currently displayed toast
+    private static JWindow currentToast = null;
+    private static Thread currentThread = null;
 
-        // 🟢 Rounded background
+    public static synchronized void showRoundedToastTopRight(Component parent, String message, Color bgColor) {
+        // 🛑 Close the current toast if it's still visible
+        if (currentToast != null) {
+            currentToast.dispose();
+            currentToast = null;
+
+            if (currentThread != null && currentThread.isAlive()) {
+                currentThread.interrupt(); // stop any ongoing animation
+            }
+        }
+
+        JWindow toast = new JWindow();
+        currentToast = toast; // save reference
+
+        // 🟢 Rounded background panel
         JPanel panel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -37,52 +47,66 @@ public class AlertUtil {
         toast.add(panel);
         toast.pack();
 
-        // 📍 Final top-right position
+        // 📍 Top-right position relative to parent
         Point location = parent.getLocationOnScreen();
         int targetX = location.x + parent.getWidth() - toast.getWidth() - 20;
-        int targetY = location.y + 20;
+        int targetY = location.y + 45;
 
-        // 🪄 Start slightly to the right (inside frame area)
-        int startX = targetX + 50;
+        int startX = targetX + 15;
 
         toast.setLocation(startX, targetY);
         toast.setOpacity(0f);
         toast.setAlwaysOnTop(true);
         toast.setVisible(true);
 
-        // 🎬 Slide in (right → left)
-        new Thread(() -> {
-            for (int i = 0; i <= 10; i++) {
-                float t = i / 10f;
-                int x = startX - (int) ((startX - targetX) * t);
-                float opacity = t;
+        // 🪄 Animation thread
+        Thread t = new Thread(() -> {
+            try {
+                // 🎬 Slide in
+                for (int i = 0; i <= 10; i++) {
+                    float p = i / 10f;
+                    int x = startX - (int) ((startX - targetX) * p);
+                    float opacity = p;
+                    SwingUtilities.invokeLater(() -> {
+                        toast.setOpacity(opacity);
+                        toast.setLocation(x, targetY);
+                    });
+                    sleep(25);
+                }
+
+                // ⏳ Stay visible
+                sleep(2500);
+
+                // 🎬 Slide out
+                for (int i = 10; i >= 0; i--) {
+                    float p = i / 10f;
+                    int x = startX - (int) ((startX - targetX) * p);
+                    float opacity = p;
+                    SwingUtilities.invokeLater(() -> {
+                        toast.setOpacity(opacity);
+                        toast.setLocation(x, targetY);
+                    });
+                    sleep(25);
+                }
+
+            } catch (InterruptedException ignored) {
+                // 🧹 If interrupted, just close fast
+            } finally {
                 SwingUtilities.invokeLater(() -> {
-                    toast.setOpacity(opacity);
-                    toast.setLocation(x, targetY);
+                    toast.dispose();
+                    if (toast == currentToast) {
+                        currentToast = null;
+                        currentThread = null;
+                    }
                 });
-                sleep(25);
             }
+        });
 
-            // ⏳ stay visible
-            sleep(2500);
-
-            // 🎬 Slide out (left → right)
-            for (int i = 10; i >= 0; i--) {
-                float t = i / 10f;
-                int x = startX - (int) ((startX - targetX) * t);
-                float opacity = t;
-                SwingUtilities.invokeLater(() -> {
-                    toast.setOpacity(opacity);
-                    toast.setLocation(x, targetY);
-                });
-                sleep(25);
-            }
-
-            SwingUtilities.invokeLater(toast::dispose);
-        }).start();
+        currentThread = t;
+        t.start();
     }
 
-    private static void sleep(long ms) {
-        try { Thread.sleep(ms); } catch (InterruptedException ignored) {}
+    private static void sleep(long ms) throws InterruptedException {
+        Thread.sleep(ms);
     }
 }

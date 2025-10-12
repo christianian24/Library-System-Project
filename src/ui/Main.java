@@ -1,7 +1,5 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
+//@author ian
+
 package ui;
 
 import util.FrameUtil; 
@@ -113,10 +111,11 @@ public class Main extends javax.swing.JFrame {
         jButton1 = new javax.swing.JButton();
         CreateButton = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
-        jLabel4 = new javax.swing.JLabel();
         jPanel3 = new javax.swing.JPanel();
-        jLabel6 = new javax.swing.JLabel();
+        jLabel7 = new javax.swing.JLabel();
         jLabel5 = new javax.swing.JLabel();
+        jLabel4 = new javax.swing.JLabel();
+        jLabel6 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -254,27 +253,31 @@ public class Main extends javax.swing.JFrame {
                 .addContainerGap(80, Short.MAX_VALUE))
         );
 
-        jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(737, 214, -1, -1));
+        jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(1060, 240, -1, -1));
 
         jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/bagong logo.png"))); // NOI18N
         jLabel1.setMaximumSize(new java.awt.Dimension(200, 143));
         jLabel1.setMinimumSize(new java.awt.Dimension(200, 143));
         jLabel1.setPreferredSize(new java.awt.Dimension(200, 143));
-        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(784, 65, 314, -1));
-
-        jLabel4.setFont(new java.awt.Font("Segoe UI", 2, 18)); // NOI18N
-        jLabel4.setText("Want to learn more from us? Visit Our");
-        jPanel1.add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(6, 0, 384, -1));
+        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(1110, 90, 314, -1));
 
         jPanel3.setLayout(new java.awt.GridLayout(1, 0));
         jPanel1.add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(263, 321, -1, -1));
 
-        jLabel6.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/fixed.png"))); // NOI18N
-        jLabel6.setText("jLabel6");
-        jPanel1.add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 20, 130, 59));
+        jLabel7.setFont(new java.awt.Font("Serif", 3, 24)); // NOI18N
+        jLabel7.setText("“Where every book finds its place.”");
+        jPanel1.add(jLabel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(380, 540, -1, -1));
 
         jLabel5.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/archiva2.png"))); // NOI18N
-        jPanel1.add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(70, 220, 530, 280));
+        jPanel1.add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(300, 270, 530, 280));
+
+        jLabel4.setFont(new java.awt.Font("Segoe UI", 2, 18)); // NOI18N
+        jLabel4.setText("Want to learn more from us? Visit Our");
+        jPanel1.add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 770, 384, 20));
+
+        jLabel6.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/fixed.png"))); // NOI18N
+        jLabel6.setText("jLabel6");
+        jPanel1.add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 790, 130, 50));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -295,45 +298,58 @@ public class Main extends javax.swing.JFrame {
     }//GEN-LAST:event_txtUsernameActionPerformed
 
     private void LoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_LoginActionPerformed
+                                         
     String email = txtUsername.getText().trim();
-    String password = new String(txtPassword.getPassword());
+    String password = new String(txtPassword.getPassword()).trim();
 
-    final String ADMIN_EMAIL = "admin";
-    final String ADMIN_PASS = "pass";
-
-    // 🔸 1. Admin login (optional)
-    if (email.equals(ADMIN_EMAIL) && password.equals(ADMIN_PASS)) {
-        util.AlertUtil.showRoundedToastTopRight(this, "Welcome Admin!", new java.awt.Color(46, 204, 113));
-        // You can open AdminJFrame here if you have one
+    // ✅ Check if a role is selected
+    if (selectedRole.isEmpty()) {
+        util.AlertUtil.showRoundedToastTopRight(this, "Please select a role first!", new java.awt.Color(132, 153, 122));
         return;
     }
 
-    // 🔸 2. Student login
-    if (util.UserDataManager.authenticateStudent(email, password)) {
-    util.AlertUtil.showRoundedToastTopRight(this, "Login successful!", new java.awt.Color(46, 204, 113));
+    // Authenticate user (both admin and student)
+    User user = UserDataManager.authenticate(email, password);
 
-    StudentFrame studentFrame = new StudentFrame();
-    studentFrame.setLocationRelativeTo(null); // centers window
-    studentFrame.setVisible(true);
+    if (user == null) {
+        util.AlertUtil.showRoundedToastTopRight(this, "Invalid credentials!", new java.awt.Color(132, 153, 122));
+        return;
+    }
 
-    this.dispose(); // close login after student window is shown
+    // 🔸 Check if role matches what was selected
+    if (!user.getRole().equalsIgnoreCase(selectedRole)) {
+        util.AlertUtil.showRoundedToastTopRight(this, "Role mismatch! Try selecting the correct role.", new java.awt.Color(231, 76, 60));
+        return;
     }
-    else {
-        util.AlertUtil.showRoundedToastTopRight(this, "Invalid credentials!", new java.awt.Color(231, 76, 60));
+
+    if (user.getRole().equalsIgnoreCase("admin")) {
+        util.AlertUtil.showRoundedToastTopRight(this, "Welcome Admin!", new java.awt.Color(46, 204, 113));
+        Dashboard dashboard = new Dashboard();
+        dashboard.setLocationRelativeTo(null);
+        dashboard.setVisible(true);
+        this.dispose();
+    } else {
+        util.AlertUtil.showRoundedToastTopRight(this, "Login successful!", new java.awt.Color(46, 204, 113));
+        StudentFrame studentFrame = new StudentFrame();
+        studentFrame.setLocationRelativeTo(null);
+        studentFrame.setVisible(true);
+        this.dispose();
     }
+
+
 
 
     }//GEN-LAST:event_LoginActionPerformed
 
     private void AdminActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AdminActionPerformed
     selectedRole = "admin";
-    JOptionPane.showMessageDialog(this, "Admin mode selected");
-                                
+    util.AlertUtil.showRoundedToastTopRight(this, "Admin mode selected", new java.awt.Color(182,176,159));
+                           
     }//GEN-LAST:event_AdminActionPerformed
 
     private void StudentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_StudentActionPerformed
     selectedRole = "student";
-    JOptionPane.showMessageDialog(this, "Student mode selected");
+    util.AlertUtil.showRoundedToastTopRight(this, "Student mode selected", new java.awt.Color(182,176,159));
     }//GEN-LAST:event_StudentActionPerformed
 
     private void CreateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CreateButtonActionPerformed
@@ -381,6 +397,7 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
