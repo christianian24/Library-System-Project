@@ -343,9 +343,9 @@ public class Main extends javax.swing.JFrame {
     if (util.UserDataManager.authenticateStudent(email, password)) {
     util.AlertUtil.showRoundedToastTopRight(this, "Login successful!", new java.awt.Color(46, 204, 113));
 
-    Student studentFrame = new Student();
+    StudentFrame studentFrame = new StudentFrame();
     studentFrame.setLocationRelativeTo(null); // centers window
-    new StudentFrame().setVisible(true);
+    studentFrame.setVisible(true);
 
     this.dispose(); // close login after student window is shown
     }
