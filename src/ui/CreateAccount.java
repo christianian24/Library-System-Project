@@ -4,7 +4,7 @@ package ui;
 import util.FrameUtil;
 import java.awt.Color;
 import util.AlertUtil;
-import util.UserDataManager;
+import data.UserDataManager;
 
 public class CreateAccount extends javax.swing.JFrame {
     
@@ -492,7 +492,7 @@ public class CreateAccount extends javax.swing.JFrame {
     model.User user = new model.User("student", first, last, email, mobile, pass);
 
     // 🔸 Save user to file (users.txt)
-    boolean success = util.UserDataManager.addUser(user);
+    boolean success = data.UserDataManager.addUser(user);
 
     if (success) {
         util.AlertUtil.showRoundedToastTopRight(this, "Account created successfully!", new java.awt.Color(144, 166, 133));

@@ -9,10 +9,10 @@ import javax.swing.plaf.basic.BasicButtonUI;
 public class CircleEdgebtn {
 
     // Colors and font
-    private static final Color BORDER_COLOR = new Color(0,0,0);
-    private static final Color TEXT_COLOR = new Color(60, 60, 90);
-    private static final Color HOVER_BG = new Color(230, 230, 255);
-    private static final Color PRESSED_BG = new Color(210, 210, 245);
+    private static final Color BORDER_COLOR = new Color(180, 165, 145);
+    private static final Color TEXT_COLOR = new Color(90, 80, 70);
+    private static final Color HOVER_BG = new Color(240, 230, 210);
+    private static final Color PRESSED_BG = new Color(215, 200, 180);
     private static final Font BUTTON_FONT = new Font("Segoe UI", Font.BOLD, 14);
 
     public static void styleForwardButton(JButton button) {

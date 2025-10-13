@@ -9,6 +9,7 @@ public class ButtonRendererEditor extends AbstractCellEditor implements TableCel
     private final JButton editButton = new JButton("Edit");
     private final JButton deleteButton = new JButton("Delete");
     private int editingRow = -1;
+    private JTable currentTable;
 
     public interface ActionHandler {
         void onEdit(int row);
@@ -19,21 +20,25 @@ public class ButtonRendererEditor extends AbstractCellEditor implements TableCel
 
     public ButtonRendererEditor(ActionHandler handler) {
         this.handler = handler;
-
+        
         // --- Styling ---
         styleButton(editButton, new Color(222, 207, 187), Color.BLACK);
         styleButton(deleteButton, new Color(200, 60, 60), Color.WHITE);
-
+        
         editButton.addActionListener(e -> {
-            if (editingRow >= 0) handler.onEdit(editingRow);
+            if (editingRow >= 0) {
+                handler.onEdit(editingRow);
+            }
             stopCellEditing();
         });
-
+        
         deleteButton.addActionListener(e -> {
-            if (editingRow >= 0) handler.onDelete(editingRow);
+            if (editingRow >= 0) {
+                handler.onDelete(editingRow);
+            }
             stopCellEditing();
         });
-
+        
         panel.setOpaque(true);
         panel.add(editButton);
         panel.add(deleteButton);
@@ -51,8 +56,11 @@ public class ButtonRendererEditor extends AbstractCellEditor implements TableCel
     @Override
     public Component getTableCellRendererComponent(JTable table, Object value,
             boolean isSelected, boolean hasFocus, int row, int column) {
-        if (isSelected) panel.setBackground(new Color(0, 120, 215));
-        else panel.setBackground(Color.WHITE);
+        if (isSelected) {
+            panel.setBackground(new Color(250,250,250));
+        } else {
+            panel.setBackground(Color.WHITE);
+        }
         return panel;
     }
 
@@ -60,12 +68,21 @@ public class ButtonRendererEditor extends AbstractCellEditor implements TableCel
     public Component getTableCellEditorComponent(JTable table, Object value,
             boolean isSelected, int row, int column) {
         editingRow = row;
-        panel.setBackground(new Color(240, 240, 240));
+        currentTable = table;
+        panel.setBackground(new Color(250, 250, 250));
         return panel;
     }
 
     @Override
     public Object getCellEditorValue() {
-        return null;
+        return "";
+    }
+    
+    @Override
+    public boolean stopCellEditing() {
+        // Don't actually update the table cell, just stop editing
+        fireEditingStopped();
+        return true;
+        
     }
 }

@@ -5,7 +5,7 @@ package ui;
 import util.FrameUtil; 
 import java.awt.Color;
 import javax.swing.JOptionPane;
-import util.UserDataManager;
+import data.UserDataManager;
 import model.User;
 /**
  *

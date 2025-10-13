@@ -1,6 +1,6 @@
 //@ian
 
-package util;
+package data;
 
 import java.io.*;
 import java.nio.file.*;

@@ -10,9 +10,9 @@ import javax.swing.plaf.basic.BasicButtonUI;
 public class btnBorderless {
 
     // Neutral grayscale palette
-    private static final Color TEXT_COLOR = new Color(60, 60, 60);
-    private static final Color HOVER_BG = new Color(245, 245, 245);
-    private static final Color PRESSED_BG = new Color(230, 230, 230);
+    private static final Color TEXT_COLOR = new Color(90, 80, 70);
+    private static final Color HOVER_BG = new Color(240, 230, 210);
+    private static final Color PRESSED_BG = new Color(215, 200, 180);
     private static final Font BUTTON_FONT = new Font("Segoe UI", Font.BOLD, 14);
 
     private static void baseStyle(JButton button) {

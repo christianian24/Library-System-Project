@@ -1,18 +1,20 @@
 //@ian
-
 package ui;
 
 import util.FrameUtil;
 import util.btnBorderless;
 import util.CircleEdgebtn;
 import util.TableStyleUtil;
-import util.MemberDataManager;
+import util.ButtonRendererEditor;
+import data.MemberDataManager;
 import model.Member;
 
 import java.util.List;
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
+import javax.swing.table.*;
 import javax.swing.table.TableRowSorter;
+import data.BookDataManager;
+import model.Book;
 
 /**
  *
@@ -28,7 +30,9 @@ public class Dashboard extends javax.swing.JFrame {
     public Dashboard() {
         initComponents();
         FrameUtil.setupFrame(this);
-
+        
+        setupActionButtons();
+        
         // Button styles
         btnBorderless.styleBorderlessButton(btnMembers);
         btnBorderless.styleBorderlessButton(btnTransactions);
@@ -36,33 +40,43 @@ public class Dashboard extends javax.swing.JFrame {
         btnBorderless.styleBorderlessButton(btnBooks);
         CircleEdgebtn.styleForwardButton(btnLogout);
         
-        util.TableStyleUtil.styleModernTable(MemberTable, jScrollPane1);
-        
-        // 🪄 Apply modern style
-        util.TableStyleUtil.styleModernTable(MemberTable, jScrollPane1);
-
-        // Optional alignment
-        util.TableStyleUtil.centerColumn(MemberTable, 0); // Member ID
-        util.TableStyleUtil.centerColumn(MemberTable, 5); // Actions
-
-        // 🧭 Set custom column widths
-        util.TableStyleUtil.setColumnWidths(MemberTable, 100, 150, 250, 150, 150, 120);
+        // ========== MEMBERS TABLE SETUP ==========
+        TableStyleUtil.styleModernTable(MemberTable, jScrollPane1);
+        TableStyleUtil.centerColumn(MemberTable, 0); // Member ID
+        TableStyleUtil.centerColumn(MemberTable, 5); // Actions
+        TableStyleUtil.setColumnWidths(MemberTable, 100, 150, 250, 150, 150, 120);
         MemberTable.getTableHeader().setResizingAllowed(false);
         
+        // ========== BOOKS TABLE SETUP ==========
+        TableStyleUtil.styleModernTable(BooksTable, jScrollPane2);
+        TableStyleUtil.centerColumn(BooksTable, 0); // Title
+        TableStyleUtil.centerColumn(BooksTable, 7); // Actions
+        TableStyleUtil.setColumnWidths(BooksTable, 150, 120, 120, 130, 120, 100, 100, 100);
+        BooksTable.getTableHeader().setResizingAllowed(false);
         
-        
-        
-        // Load data + events
+        // Load data + setup action buttons
         loadMembersToTable();
-
+        setupActionButtons();
+        
+        // Load Book data + setup action buttons
+        loadBooksToTable();
+        setupBooksActionButtons();
+        
+        
+        // listeners
         btnAddMember.addActionListener(evt -> addMember());
-        SearchBar.addKeyListener(new java.awt.event.KeyAdapter() {
+        MemberSearchBar.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
                 searchMember();
             }
         });
         
-        
+        btnAddBooks.addActionListener(evt -> addBook());
+        BookSearchBar.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                searchBook();
+            }
+        });
     }
 
     // ─────────────── Load Members ───────────────
@@ -116,12 +130,312 @@ public class Dashboard extends javax.swing.JFrame {
 
     // ─────────────── Search Filter ───────────────
     private void searchMember() {
-        String query = SearchBar.getText().toLowerCase();
+        String query = MemberSearchBar.getText().toLowerCase();
         DefaultTableModel model = (DefaultTableModel) MemberTable.getModel();
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
         MemberTable.setRowSorter(sorter);
         sorter.setRowFilter(RowFilter.regexFilter("(?i)" + query));
     }
+
+    // ─────────────── Action Buttons Setup ───────────────
+    private void setupActionButtons() {
+        TableColumn actionColumn = MemberTable.getColumnModel().getColumn(5);
+
+        ButtonRendererEditor.ActionHandler handler = new ButtonRendererEditor.ActionHandler() {
+            @Override
+            public void onEdit(int row) {
+                editRow(row);
+            }
+
+            @Override
+            public void onDelete(int row) {
+                deleteRow(row);
+            }
+        };
+
+        ButtonRendererEditor buttonEditor = new ButtonRendererEditor(handler);
+        actionColumn.setCellRenderer(buttonEditor);
+        actionColumn.setCellEditor(buttonEditor);
+
+        // ✅ CRITICAL: Enable editing on single click
+        MemberTable.putClientProperty("JTable.autoStartsEdit", Boolean.TRUE);
+
+        // ✅ Stop editing when focus leaves the table
+        MemberTable.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
+    }
+
+    // ─────────────── Edit Member ───────────────
+    private void editRow(int row) {
+        if (row < 0) return;
+        DefaultTableModel model = (DefaultTableModel) MemberTable.getModel();
+
+        String id = model.getValueAt(row, 0).toString();
+        String name = model.getValueAt(row, 1).toString();
+        String email = model.getValueAt(row, 2).toString();
+        String phone = model.getValueAt(row, 3).toString();
+        String address = model.getValueAt(row, 4).toString();
+
+        JTextField nameField = new JTextField(name);
+        JTextField emailField = new JTextField(email);
+        JTextField phoneField = new JTextField(phone);
+        JTextField addressField = new JTextField(address);
+
+        JPanel panel = new JPanel(new java.awt.GridLayout(0, 1));
+        panel.setBackground(new java.awt.Color(230, 216, 195)); // soft beige
+        panel.add(new JLabel("Name:"));
+        panel.add(nameField);
+        panel.add(new JLabel("Email:"));
+        panel.add(emailField);
+        panel.add(new JLabel("Phone:"));
+        panel.add(phoneField);
+        panel.add(new JLabel("Address:"));
+        panel.add(addressField);
+
+        int result = JOptionPane.showConfirmDialog(
+                this, panel, "Edit Member", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE
+        );
+
+        if (result == JOptionPane.OK_OPTION) {
+            Member updatedMember = new Member(
+                    id,
+                    nameField.getText().trim(),
+                    emailField.getText().trim(),
+                    phoneField.getText().trim(),
+                    addressField.getText().trim()
+            );
+
+            if (MemberDataManager.updateMember(updatedMember)) {
+                JOptionPane.showMessageDialog(this, "Member updated successfully!");
+                loadMembersToTable();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to update member.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+// ========== DELETE MEMBERS ==========
+    private void deleteRow(int row) {
+        if (row < 0) return;
+        DefaultTableModel model = (DefaultTableModel) MemberTable.getModel();
+        String id = model.getValueAt(row, 0).toString();
+
+        int confirm = JOptionPane.showConfirmDialog(
+                this, "Are you sure you want to delete this member?", "Confirm Delete", JOptionPane.YES_NO_OPTION
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            if (MemberDataManager.deleteMember(id)) {
+                JOptionPane.showMessageDialog(this, "Member deleted successfully!");
+                loadMembersToTable();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to delete member.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }  
+    }
+
+
+//======================================================================================================================================================
+
+
+    // ========== LOAD BOOKS METHOD ==========
+    private void loadBooksToTable() {
+        DefaultTableModel model = (DefaultTableModel) BooksTable.getModel();
+        model.setRowCount(0);
+
+        List<Book> books = BookDataManager.loadBooks();  // You'll need to create this
+        for (Book b : books) {
+            model.addRow(new Object[]{
+                b.getTitle(), 
+                b.getAuthor(), 
+                b.getIsbn(), 
+                b.getCategory(), 
+                b.getTotalCopies(), 
+                b.getAvailableCopies(), 
+                b.getStatus(), 
+                ""  // Actions column
+            });
+        }
+    }
+
+    // ========== ADD NEW BOOK METHOD ==========
+    private void addBook() {
+        JTextField titleField = new JTextField();
+        JTextField authorField = new JTextField();
+        JTextField isbnField = new JTextField();
+        JTextField categoryField = new JTextField();
+        JTextField totalCopiesField = new JTextField();
+
+        JPanel panel = new JPanel(new java.awt.GridLayout(0, 1));
+        panel.add(new JLabel("Title:"));
+        panel.add(titleField);
+        panel.add(new JLabel("Author:"));
+        panel.add(authorField);
+        panel.add(new JLabel("ISBN:"));
+        panel.add(isbnField);
+        panel.add(new JLabel("Category:"));
+        panel.add(categoryField);
+        panel.add(new JLabel("Total Copies:"));
+        panel.add(totalCopiesField);
+
+        int result = JOptionPane.showConfirmDialog(this, panel, "Add New Book", JOptionPane.OK_CANCEL_OPTION);
+        if (result == JOptionPane.OK_OPTION) {
+            Book newBook = new Book(
+                    titleField.getText(),
+                    authorField.getText(),
+                    isbnField.getText(),
+                    categoryField.getText(),
+                    Integer.parseInt(totalCopiesField.getText())
+            );
+
+            boolean success = BookDataManager.addBook(newBook);
+            if (success) {
+                JOptionPane.showMessageDialog(this, "✅ Book added successfully!");
+                loadBooksToTable();
+            } else {
+                JOptionPane.showMessageDialog(this, "⚠️ Failed to add book.");
+            }
+        }
+    }
+
+    // ========== SEARCH BOOKS METHOD ==========
+    private void searchBook() {
+        String query = BookSearchBar.getText().toLowerCase();
+        DefaultTableModel model = (DefaultTableModel) BooksTable.getModel();
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
+        BooksTable.setRowSorter(sorter);
+        sorter.setRowFilter(RowFilter.regexFilter("(?i)" + query));
+    }
+
+    // ========== SETUP BOOKS ACTION BUTTONS ==========
+    private void setupBooksActionButtons() {
+        TableColumn actionColumn = BooksTable.getColumnModel().getColumn(7);
+
+        ButtonRendererEditor.ActionHandler handler = new ButtonRendererEditor.ActionHandler() {
+            @Override
+            public void onEdit(int row) {
+                editBook(row);
+            }
+
+            @Override
+            public void onDelete(int row) {
+                deleteBook(row);
+            }
+        };
+
+        ButtonRendererEditor buttonEditor = new ButtonRendererEditor(handler);
+        actionColumn.setCellRenderer(buttonEditor);
+        actionColumn.setCellEditor(buttonEditor);
+
+        BooksTable.putClientProperty("JTable.autoStartsEdit", Boolean.TRUE);
+        BooksTable.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
+    }
+
+    // ========== EDIT BOOK METHOD ==========
+    private void editBook(int row) {
+        if (row < 0) return;
+        DefaultTableModel model = (DefaultTableModel) BooksTable.getModel();
+
+        String title = model.getValueAt(row, 0).toString();
+        String author = model.getValueAt(row, 1).toString();
+        String isbn = model.getValueAt(row, 2).toString();
+        String category = model.getValueAt(row, 3).toString();
+        String totalCopies = model.getValueAt(row, 4).toString();
+        String availableCopies = model.getValueAt(row, 5).toString();
+        String status = model.getValueAt(row, 6).toString();
+
+        JTextField titleField = new JTextField(title);
+        JTextField authorField = new JTextField(author);
+        JTextField isbnField = new JTextField(isbn);
+        JTextField categoryField = new JTextField(category);
+        JTextField totalCopiesField = new JTextField(totalCopies);
+        JTextField availableCopiesField = new JTextField(availableCopies);
+        JTextField statusField = new JTextField(status);
+
+        JPanel panel = new JPanel(new java.awt.GridLayout(0, 1));
+        panel.add(new JLabel("Title:"));
+        panel.add(titleField);
+        panel.add(new JLabel("Author:"));
+        panel.add(authorField);
+        panel.add(new JLabel("ISBN:"));
+        panel.add(isbnField);
+        panel.add(new JLabel("Category:"));
+        panel.add(categoryField);
+        panel.add(new JLabel("Total Copies:"));
+        panel.add(totalCopiesField);
+        panel.add(new JLabel("Available Copies:"));
+        panel.add(availableCopiesField);
+        panel.add(new JLabel("Status:"));
+        panel.add(statusField);
+
+        int result = JOptionPane.showConfirmDialog(this, panel, "Edit Book", JOptionPane.OK_CANCEL_OPTION);
+        if (result == JOptionPane.OK_OPTION) {
+            Book updatedBook = new Book(
+                    titleField.getText().trim(),
+                    authorField.getText().trim(),
+                    isbnField.getText().trim(),
+                    categoryField.getText().trim(),
+                    Integer.parseInt(totalCopiesField.getText())
+            );
+
+            if (BookDataManager.updateBook(updatedBook)) {
+                JOptionPane.showMessageDialog(this, "Book updated successfully!");
+                loadBooksToTable();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to update book.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    // ========== DELETE BOOK METHOD ==========
+    private void deleteBook(int row) {
+        if (row < 0) return;
+        DefaultTableModel model = (DefaultTableModel) BooksTable.getModel();
+        String title = model.getValueAt(row, 0).toString();
+
+        int confirm = JOptionPane.showConfirmDialog(
+                this, "Are you sure you want to delete this book?", "Confirm Delete", JOptionPane.YES_NO_OPTION
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            if (BookDataManager.deleteBook(title)) {
+                JOptionPane.showMessageDialog(this, "Book deleted successfully!");
+                loadBooksToTable();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to delete book.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+
+//======================================================================================================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -142,14 +456,22 @@ public class Dashboard extends javax.swing.JFrame {
         TabbedPane = new javax.swing.JTabbedPane();
         MemberPanel = new javax.swing.JPanel();
         btnAddMember = new javax.swing.JButton();
-        SearchBar = new javax.swing.JTextField();
+        MemberSearchBar = new javax.swing.JTextField();
         jScrollPane1 = new javax.swing.JScrollPane();
         MemberTable = new javax.swing.JTable();
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
         BooksPanel = new javax.swing.JPanel();
+        btnAddBooks = new javax.swing.JButton();
+        BookSearchBar = new javax.swing.JTextField();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        BooksTable = new javax.swing.JTable();
+        jLabel7 = new javax.swing.JLabel();
+        jLabel8 = new javax.swing.JLabel();
         TransactionPanel = new javax.swing.JPanel();
+        jLabel6 = new javax.swing.JLabel();
         ReportsPanel = new javax.swing.JPanel();
+        jLabel4 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -304,9 +626,9 @@ public class Dashboard extends javax.swing.JFrame {
         btnAddMember.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         btnAddMember.setFocusable(false);
 
-        SearchBar.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        SearchBar.setText("Search Bar");
-        SearchBar.setFocusable(false);
+        MemberSearchBar.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        MemberSearchBar.setText("Search Bar");
+        MemberSearchBar.setFocusable(false);
 
         MemberTable.setBackground(new java.awt.Color(245, 239, 231));
         MemberTable.setModel(new javax.swing.table.DefaultTableModel(
@@ -320,7 +642,7 @@ public class Dashboard extends javax.swing.JFrame {
                 java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Integer.class, java.lang.String.class, java.lang.String.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false
+                false, false, false, false, false, true
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -350,7 +672,7 @@ public class Dashboard extends javax.swing.JFrame {
                     .addGroup(MemberPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                         .addComponent(jScrollPane1)
                         .addGroup(MemberPanelLayout.createSequentialGroup()
-                            .addComponent(SearchBar, javax.swing.GroupLayout.PREFERRED_SIZE, 961, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(MemberSearchBar, javax.swing.GroupLayout.PREFERRED_SIZE, 961, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGap(27, 27, 27)
                             .addComponent(btnAddMember)))
                     .addComponent(jLabel2))
@@ -366,7 +688,7 @@ public class Dashboard extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(MemberPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnAddMember, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(SearchBar, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(MemberSearchBar, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(27, 27, 27)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 610, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(55, 55, 55))
@@ -374,41 +696,130 @@ public class Dashboard extends javax.swing.JFrame {
 
         TabbedPane.addTab("Members", MemberPanel);
 
+        BooksPanel.setBackground(new java.awt.Color(245, 239, 231));
+
+        btnAddBooks.setBackground(new java.awt.Color(222, 207, 187));
+        btnAddBooks.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        btnAddBooks.setText("Add Member Button");
+        btnAddBooks.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        btnAddBooks.setFocusable(false);
+
+        BookSearchBar.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        BookSearchBar.setText("Search Bar");
+        BookSearchBar.setFocusable(false);
+
+        BooksTable.setBackground(new java.awt.Color(245, 239, 231));
+        BooksTable.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+            }, // **Change this line to an empty array: new Object [][] {}**
+            new String [] {
+                "Title", "Author", "ISBN", "Category", "Total Copies", "Available", "Status", "Actions"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.String.class, java.lang.String.class,
+                java.lang.String.class, java.lang.Integer.class, java.lang.Integer.class,
+                java.lang.String.class, java.lang.String.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false, false, true
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        BooksTable.getTableHeader().setReorderingAllowed(false);
+        jScrollPane2.setViewportView(BooksTable);
+
+        jLabel7.setFont(new java.awt.Font("Arial", 1, 24)); // NOI18N
+        jLabel7.setText("Member Management");
+
+        jLabel8.setText("Register and manage library members");
+
         javax.swing.GroupLayout BooksPanelLayout = new javax.swing.GroupLayout(BooksPanel);
         BooksPanel.setLayout(BooksPanelLayout);
         BooksPanelLayout.setHorizontalGroup(
             BooksPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 1380, Short.MAX_VALUE)
+            .addGroup(BooksPanelLayout.createSequentialGroup()
+                .addGap(114, 114, 114)
+                .addGroup(BooksPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel8)
+                    .addGroup(BooksPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addComponent(jScrollPane2)
+                        .addGroup(BooksPanelLayout.createSequentialGroup()
+                            .addComponent(BookSearchBar, javax.swing.GroupLayout.PREFERRED_SIZE, 961, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGap(27, 27, 27)
+                            .addComponent(btnAddBooks)))
+                    .addComponent(jLabel7))
+                .addContainerGap(123, Short.MAX_VALUE))
         );
         BooksPanelLayout.setVerticalGroup(
             BooksPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 845, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, BooksPanelLayout.createSequentialGroup()
+                .addContainerGap(65, Short.MAX_VALUE)
+                .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel8)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(BooksPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnAddBooks, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(BookSearchBar, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(27, 27, 27)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 610, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(55, 55, 55))
         );
 
         TabbedPane.addTab("Books", BooksPanel);
+
+        TransactionPanel.setBackground(new java.awt.Color(245, 239, 231));
+
+        jLabel6.setFont(new java.awt.Font("Serif", 3, 36)); // NOI18N
+        jLabel6.setText("Coming Soon.");
 
         javax.swing.GroupLayout TransactionPanelLayout = new javax.swing.GroupLayout(TransactionPanel);
         TransactionPanel.setLayout(TransactionPanelLayout);
         TransactionPanelLayout.setHorizontalGroup(
             TransactionPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 1380, Short.MAX_VALUE)
+            .addGroup(TransactionPanelLayout.createSequentialGroup()
+                .addGap(525, 525, 525)
+                .addComponent(jLabel6)
+                .addContainerGap(644, Short.MAX_VALUE))
         );
         TransactionPanelLayout.setVerticalGroup(
             TransactionPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 845, Short.MAX_VALUE)
+            .addGroup(TransactionPanelLayout.createSequentialGroup()
+                .addGap(361, 361, 361)
+                .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(416, Short.MAX_VALUE))
         );
 
         TabbedPane.addTab("Transaction", TransactionPanel);
+
+        ReportsPanel.setBackground(new java.awt.Color(245, 239, 231));
+
+        jLabel4.setFont(new java.awt.Font("Serif", 3, 36)); // NOI18N
+        jLabel4.setText("Coming Soon.");
 
         javax.swing.GroupLayout ReportsPanelLayout = new javax.swing.GroupLayout(ReportsPanel);
         ReportsPanel.setLayout(ReportsPanelLayout);
         ReportsPanelLayout.setHorizontalGroup(
             ReportsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 1380, Short.MAX_VALUE)
+            .addGroup(ReportsPanelLayout.createSequentialGroup()
+                .addGap(525, 525, 525)
+                .addComponent(jLabel4)
+                .addContainerGap(644, Short.MAX_VALUE))
         );
         ReportsPanelLayout.setVerticalGroup(
             ReportsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 845, Short.MAX_VALUE)
+            .addGroup(ReportsPanelLayout.createSequentialGroup()
+                .addGap(361, 361, 361)
+                .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(416, Short.MAX_VALUE))
         );
 
         TabbedPane.addTab("Reports", ReportsPanel);
@@ -477,14 +888,17 @@ public class Dashboard extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JTextField BookSearchBar;
     private javax.swing.JPanel BooksPanel;
+    private javax.swing.JTable BooksTable;
     private javax.swing.JPanel ButtonPanels;
     private javax.swing.JPanel MemberPanel;
+    private javax.swing.JTextField MemberSearchBar;
     private javax.swing.JTable MemberTable;
     private javax.swing.JPanel ReportsPanel;
-    private javax.swing.JTextField SearchBar;
     private javax.swing.JTabbedPane TabbedPane;
     private javax.swing.JPanel TransactionPanel;
+    private javax.swing.JButton btnAddBooks;
     private javax.swing.JButton btnAddMember;
     private javax.swing.JButton btnBooks;
     private javax.swing.JButton btnLogout;
@@ -495,10 +909,15 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel9;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JSeparator jSeparator2;
     // End of variables declaration//GEN-END:variables
