@@ -1,3 +1,6 @@
+//author @ian
+
+
 package util;
 
 import javax.swing.*;
@@ -6,7 +9,6 @@ import java.awt.event.*;
 
 /**
  * Modern confirmation dialog
- * Replaces JOptionPane confirm dialogs
  */
 public class ModernConfirm extends JDialog {
     private boolean confirmed = false;

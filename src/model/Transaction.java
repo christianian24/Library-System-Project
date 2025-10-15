@@ -1,3 +1,5 @@
+//author @ian
+
 package model;
 
 public class Transaction {

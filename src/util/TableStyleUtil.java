@@ -1,3 +1,5 @@
+//author @ian
+
 package util;
 
 import java.awt.*;
@@ -14,7 +16,9 @@ public class TableStyleUtil {
     public static void styleModernTable(JTable table, JScrollPane scrollPane, int[] skipColumns) {
         // --- Scroll Pane & Table Setup ---
         scrollPane.getViewport().setBackground(new Color(245, 239, 231));
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        
+        // Add gray border to scroll pane (which contains the table)
+        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
 
         table.setRowHeight(45);
         table.setIntercellSpacing(new Dimension(0, 5));
@@ -27,7 +31,7 @@ public class TableStyleUtil {
         table.setFocusable(false);
         table.getTableHeader().setReorderingAllowed(false);
         
-        // ✅ Disable row selection highlight
+        // Disable row selection highlight
         table.setSelectionBackground(new Color(250, 250, 250));
         table.setSelectionForeground(new Color(50, 50, 50));
 

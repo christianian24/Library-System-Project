@@ -1,3 +1,5 @@
+//author @ian
+
 package util;
 
 import java.awt.*;
@@ -6,11 +8,13 @@ import javax.swing.table.*;
 
 public class ButtonRendererEditor extends AbstractCellEditor implements TableCellRenderer, TableCellEditor {
     
-    private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 5));
-    private final JButton editButton = new JButton("Edit");
-    private final JButton deleteButton = new JButton("Delete");
+    private JPanel renderPanel;
+    private JPanel editorPanel;
+    private JButton renderEditButton;
+    private JButton renderDeleteButton;
+    private JButton editorEditButton;
+    private JButton editorDeleteButton;
     private int editingRow = -1;
-    private JTable currentTable;
     
     public interface ActionHandler {
         void onEdit(int row);
@@ -22,64 +26,120 @@ public class ButtonRendererEditor extends AbstractCellEditor implements TableCel
     public ButtonRendererEditor(ActionHandler handler) {
         this.handler = handler;
         
-        // --- Styling ---
-        styleButton(editButton, new Color(222, 207, 187), Color.BLACK);
-        styleButton(deleteButton, new Color(200, 60, 60), Color.WHITE);
+        // Create separate panels for rendering and editing
+        renderPanel = createButtonPanel();
+        editorPanel = createButtonPanel();
         
-        editButton.addActionListener(e -> {
+        // Create separate button sets
+        renderEditButton = createStyledButton("Edit", new Color(222, 207, 187), Color.BLACK);
+        renderDeleteButton = createStyledButton("Delete", new Color(200, 60, 60), Color.WHITE);
+        
+        editorEditButton = createStyledButton("Edit", new Color(222, 207, 187), Color.BLACK);
+        editorDeleteButton = createStyledButton("Delete", new Color(200, 60, 60), Color.WHITE);
+        
+        // Add action listeners only to editor buttons
+        editorEditButton.addActionListener(e -> {
             int row = editingRow;
-            stopCellEditing(); // Stop editing first
+            stopCellEditing();
             if (row >= 0) {
-                // Execute handler after stopping editing
                 SwingUtilities.invokeLater(() -> handler.onEdit(row));
             }
         });
         
-        deleteButton.addActionListener(e -> {
+        editorDeleteButton.addActionListener(e -> {
             int row = editingRow;
-            stopCellEditing(); // Stop editing first
+            stopCellEditing();
             if (row >= 0) {
-                // Execute handler after stopping editing
                 SwingUtilities.invokeLater(() -> handler.onDelete(row));
             }
         });
         
-        panel.setOpaque(true);
-        panel.add(editButton);
-        panel.add(deleteButton);
+        // Add buttons to panels
+        renderPanel.add(renderEditButton);
+        renderPanel.add(renderDeleteButton);
+        
+        editorPanel.add(editorEditButton);
+        editorPanel.add(editorDeleteButton);
     }
     
-    private void styleButton(JButton btn, Color bg, Color fg) {
+    private JPanel createButtonPanel() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 5));
+        panel.setOpaque(true);
+        panel.setBackground(Color.WHITE);
+        return panel;
+    }
+    
+    private JButton createStyledButton(String text, Color bg, Color fg) {
+        JButton btn = new JButton(text);
         btn.setBackground(bg);
         btn.setForeground(fg);
         btn.setFocusPainted(false);
-        btn.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        btn.setBorderPainted(true);
+        btn.setContentAreaFilled(true);
+        btn.setOpaque(true);
+        btn.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(bg.darker(), 1),
+            BorderFactory.createEmptyBorder(5, 10, 5, 10)
+        ));
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btn.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        
+        // Prevent color change on press by overriding the UI behavior
+        btn.setRolloverEnabled(false);
+        btn.getModel().addChangeListener(e -> {
+            ButtonModel model = (ButtonModel) e.getSource();
+            if (model.isPressed()) {
+                btn.setBackground(bg);
+            } else if (model.isRollover()) {
+                btn.setBackground(bg.brighter());
+            } else {
+                btn.setBackground(bg);
+            }
+        });
+        
+        return btn;
     }
     
     @Override
     public Component getTableCellRendererComponent(JTable table, Object value,
             boolean isSelected, boolean hasFocus, int row, int column) {
+        
+        // Set panel background based on selection
         if (isSelected) {
-            panel.setBackground(new Color(250, 250, 250));
+            renderPanel.setBackground(table.getSelectionBackground());
         } else {
-            panel.setBackground(Color.WHITE);
+            renderPanel.setBackground(Color.WHITE);
         }
-        editButton.setVisible(true);
-        deleteButton.setVisible(true);
-        return panel;
+        
+        // Ensure buttons are visible
+        renderEditButton.setVisible(true);
+        renderDeleteButton.setVisible(true);
+        
+        // Force repaint to avoid disappearing buttons
+        renderPanel.revalidate();
+        renderPanel.repaint();
+        
+        return renderPanel;
     }
     
     @Override
     public Component getTableCellEditorComponent(JTable table, Object value,
             boolean isSelected, int row, int column) {
+        
         editingRow = row;
-        currentTable = table;
-        panel.setBackground(new Color(250, 250, 250));
-        editButton.setVisible(true);
-        deleteButton.setVisible(true);
-        return panel;
+        
+        // Set editor panel background
+        editorPanel.setBackground(table.getSelectionBackground());
+        
+        // Ensure buttons are visible
+        editorEditButton.setVisible(true);
+        editorDeleteButton.setVisible(true);
+        
+        // Force repaint
+        editorPanel.revalidate();
+        editorPanel.repaint();
+        
+        return editorPanel;
     }
     
     @Override
@@ -89,12 +149,14 @@ public class ButtonRendererEditor extends AbstractCellEditor implements TableCel
     
     @Override
     public boolean stopCellEditing() {
+        editingRow = -1;
         fireEditingStopped();
         return true;
     }
     
     @Override
     public void cancelCellEditing() {
+        editingRow = -1;
         fireEditingCanceled();
     }
 }

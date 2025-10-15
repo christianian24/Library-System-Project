@@ -1,6 +1,6 @@
+admin,admin,admin,admin@archiva.com,00000000000,admin123
 student,eros,morcilla,eros@gmail.com,09399442468,hatdog
 student,fuft,trdyfdtyg,vutgfgvyutf@gmail.com,45606518951,123
 student,eros,morcilla,morcilla@gmail.com,48184105608,mahina
 student,Steaven,Siaton,steavensiaton@gmail.com,09666913100,mwaps
-admin,admin,admin,admin@archiva.com,00000000000,admin123
 student,ian,cabilen,christiancabilen925@gmail.com,09999999999,admin

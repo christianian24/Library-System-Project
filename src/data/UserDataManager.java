@@ -1,4 +1,4 @@
-//@ian
+//author @ian
 
 package data;
 

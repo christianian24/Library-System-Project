@@ -1,3 +1,5 @@
+//author @ian
+
 package util;
 
 import javax.swing.*;
@@ -8,7 +10,6 @@ import java.util.Map;
 
 /**
  * Modern, reusable dialog component for forms
- * Replaces JOptionPane with a custom-styled dialog
  */
 public class ModernDialog extends JDialog {
     private final Map<String, JComponent> fields = new HashMap<>();
@@ -73,6 +74,10 @@ public class ModernDialog extends JDialog {
             scrollPane.setBorder(null);
             scrollPane.setBackground(dialog.bgColor);
             scrollPane.getViewport().setBackground(dialog.bgColor);
+            
+            //Apply modern scroll styling to match table scrollbars
+            ScrollStyleUtil.styleModernScroll(scrollPane);
+            
             dialog.add(scrollPane, BorderLayout.CENTER);
         }
         

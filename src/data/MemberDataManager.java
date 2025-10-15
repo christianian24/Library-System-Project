@@ -1,4 +1,5 @@
-//@ian
+//author @ian
+
 package data;
 
 import java.io.*;

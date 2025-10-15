@@ -1,13 +1,11 @@
+//author @ian
+
 package util;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-/**
- * Modern toast notification system
- * Replaces JOptionPane message dialogs with sleek notifications
- */
 public class ModernNotification extends JDialog {
     
     public enum Type {

@@ -1,4 +1,6 @@
-//@ian
+//author @ian
+
+
 package ui;
 
 import util.FrameUtil;
@@ -34,10 +36,7 @@ import java.awt.Color;
 import util.ModernConfirm;
 import util.ModernDialog;
 import util.ModernNotification;
-/**
- *
- * @Cabilen
- */
+
 public class Dashboard extends javax.swing.JFrame {
 
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Dashboard.class.getName());
@@ -190,10 +189,10 @@ public class Dashboard extends javax.swing.JFrame {
         actionColumn.setCellRenderer(buttonEditor);
         actionColumn.setCellEditor(buttonEditor);
 
-        // ✅ CRITICAL: Enable editing on single click
+        // CRITICAL: Enable editing on single click
         MemberTable.putClientProperty("JTable.autoStartsEdit", Boolean.TRUE);
 
-        // ✅ Stop editing when focus leaves the table
+        // Stop editing when focus leaves the table
         MemberTable.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
     }
 
@@ -244,8 +243,7 @@ public class Dashboard extends javax.swing.JFrame {
         boolean confirmed = ModernConfirm.show(
             this,
             "Delete Member",
-            "Are you sure you want to delete '" + name +
-                    "'? This action cannot be undone."
+            "Confirm deletion of '" + name +"'? This action cannot be undone."
         );
 
         if (confirmed) {
@@ -424,7 +422,7 @@ public class Dashboard extends javax.swing.JFrame {
         boolean confirmed = ModernConfirm.show(
             this,
             "Delete Book",
-            "Are you sure you want to delete '" + title + "'? This action cannot be undone."
+            "Confirm deletion of '" + title + "'? This action cannot be undone."
         );
 
         if (confirmed) {
@@ -451,9 +449,9 @@ public class Dashboard extends javax.swing.JFrame {
         Transaction t = transactions.get(i);
             model.addRow(new Object[]{
                 t.getBookTitle(),
-                t.getBookIsbn(),      // ISBN in separate column
+                t.getBookIsbn(),      
                 t.getMemberName(),
-                t.getMemberId(),      // Member ID in separate column
+                t.getMemberId(),      
                 t.getIssueDate(),
                 t.getDueDate(),
                 t.getReturnDate(),
@@ -788,8 +786,6 @@ public class Dashboard extends javax.swing.JFrame {
         }
     }
 
-    // Add these helper methods to your Dashboard class (before the closing brace)
-
     // ========== HELPER METHODS FOR REPORTS ==========
 
     private int getAvailableBooks() {
@@ -864,7 +860,6 @@ public class Dashboard extends javax.swing.JFrame {
         return count;
     }
 
-
     //======================================================================================================================================================
     
     
@@ -873,7 +868,7 @@ public class Dashboard extends javax.swing.JFrame {
         field.setText(placeholder);
         field.setForeground(new Color(150, 150, 150)); // gray placeholder text
         field.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-        field.setBackground(new Color(245, 239, 231)); // match your panel color
+        field.setBackground(new Color(245, 239, 231)); // match panel color
         field.setFocusable(true);
 
         field.addFocusListener(new java.awt.event.FocusAdapter() {
@@ -897,7 +892,7 @@ public class Dashboard extends javax.swing.JFrame {
     
 
     private void setupGlobalClickListener() {
-    // Create a global mouse listener that will be added to all components
+    // a global mouse listener that will be added to all components
         java.awt.event.MouseAdapter globalClickListener = new java.awt.event.MouseAdapter() {
             @Override
             public void mousePressed(java.awt.event.MouseEvent e) {
@@ -1036,15 +1031,6 @@ private void searchBook() {
 
         sorter.setRowFilter(rf);
     }
-
-
-
-
-
-
-
-
-
 
   
     @SuppressWarnings("unchecked")

@@ -1,3 +1,5 @@
+//author @ian
+
 package util;
 
 import java.awt.*;
@@ -42,7 +44,6 @@ public class ScrollStyleUtil {
             }
         }
 
-        // We remove configureScrollBarColors(), since we manually paint track
         @Override
         protected void paintTrack(Graphics g, JComponent c, Rectangle trackBounds) {
             Graphics2D g2 = (Graphics2D) g.create();

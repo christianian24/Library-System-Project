@@ -1,4 +1,4 @@
-//@author ian
+//author @ian
 
 package ui;
 

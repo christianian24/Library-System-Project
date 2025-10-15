@@ -1,4 +1,4 @@
-//@ian
+//author @ian
 
 package ui;
 import util.FrameUtil;
@@ -10,9 +10,6 @@ public class CreateAccount extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(CreateAccount.class.getName());
 
-    /**
-     * Creates new form CreateAccount
-     */
     public CreateAccount() {
         initComponents();
         FrameUtil.setupFrame(this);

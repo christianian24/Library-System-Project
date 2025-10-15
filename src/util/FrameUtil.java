@@ -1,12 +1,9 @@
-//@ian
+//author @ian
 
 package util;
 
 import javax.swing.JFrame;
-/**
- *
- * @cabilen
- */
+
 public class FrameUtil {
     public static void setupFrame(JFrame frame) {
         frame.setSize(1600, 900);
