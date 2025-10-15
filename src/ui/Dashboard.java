@@ -29,7 +29,7 @@ import java.awt.GridLayout;
 import java.awt.GridBagLayout;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
-
+import java.awt.Color;
 /**
  *
  * @Cabilen
@@ -67,11 +67,20 @@ public class Dashboard extends javax.swing.JFrame {
         TableStyleUtil.setColumnWidths(BooksTable, 150, 120, 120, 130, 120, 100, 100, 100);
         BooksTable.getTableHeader().setResizingAllowed(false);
         
+        // ========== TRANSACTION TABLE SETUP ==========
         TransactionTable1.setRowHeight(50);
-        TableStyleUtil.styleModernTable(TransactionTable1, jScrollPane3, new int[]{6});
+        TableStyleUtil.styleModernTable(TransactionTable1, jScrollPane3, new int[]{8});
         ScrollStyleUtil.styleModernScroll(jScrollPane3);
-        TableStyleUtil.setColumnWidths(TransactionTable1, 180, 150, 120, 120, 120, 100, 120);
+        TableStyleUtil.setColumnWidths(TransactionTable1, 100, 80, 80, 100, 100, 100, 110, 90, 100);
         TransactionTable1.getTableHeader().setResizingAllowed(false);
+        
+        TableStyleUtil.centerColumn(TransactionTable1, 1);  // ISBN
+        TableStyleUtil.centerColumn(TransactionTable1, 3);  // Member ID
+        TableStyleUtil.centerColumn(TransactionTable1, 4);  // Issue Date
+        TableStyleUtil.centerColumn(TransactionTable1, 5);  // Due Date
+        TableStyleUtil.centerColumn(TransactionTable1, 6);  // Return Date
+        TableStyleUtil.centerColumn(TransactionTable1, 7);  // Status
+        TableStyleUtil.centerColumn(TransactionTable1, 8);  // Actions
         
         //========== Load data + setup action buttons ==========
         loadMembersToTable();
@@ -81,6 +90,12 @@ public class Dashboard extends javax.swing.JFrame {
         loadTransactionsToTable();
         setupTransactionActionButtons();
         setupReportsPanel();
+        setupGlobalClickListener();
+        
+        // ---- Search Bar Placeholder Behavior ----
+        setupSearchBar(TransactionSearchBar1, "Search Bar");
+        setupSearchBar(BookSearchBar, "Search Bar");
+        setupSearchBar(MemberSearchBar, "Search Bar");
         
         //========== listeners ==========
         btnAddMember.addActionListener(evt -> addMember());
@@ -103,6 +118,7 @@ public class Dashboard extends javax.swing.JFrame {
                 searchTransaction();
             }
         });
+        
     }
 
     //========== Load Members ==========
@@ -154,14 +170,6 @@ public class Dashboard extends javax.swing.JFrame {
         }
     }
 
-    //========== Search Filter ==========
-    private void searchMember() {
-        String query = MemberSearchBar.getText().toLowerCase();
-        DefaultTableModel model = (DefaultTableModel) MemberTable.getModel();
-        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
-        MemberTable.setRowSorter(sorter);
-        sorter.setRowFilter(RowFilter.regexFilter("(?i)" + query));
-    }
 
     //========== Action Buttons Setup ==========
     private void setupActionButtons() {
@@ -371,14 +379,6 @@ public class Dashboard extends javax.swing.JFrame {
         }
     }
 
-    // ========== SEARCH BOOKS METHOD ==========
-    private void searchBook() {
-        String query = BookSearchBar.getText().toLowerCase();
-        DefaultTableModel model = (DefaultTableModel) BooksTable.getModel();
-        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
-        BooksTable.setRowSorter(sorter);
-        sorter.setRowFilter(RowFilter.regexFilter("(?i)" + query));
-    }
 
     // ========== SETUP BOOKS ACTION BUTTONS ==========
     private void setupBooksActionButtons() {
@@ -539,10 +539,13 @@ public class Dashboard extends javax.swing.JFrame {
         model.setRowCount(0);
 
         List<Transaction> transactions = TransactionDataManager.loadTransactions();
-        for (Transaction t : transactions) {
+        for (int i = transactions.size() - 1; i >= 0; i--) {
+        Transaction t = transactions.get(i);
             model.addRow(new Object[]{
-                t.getBookTitle() + "\n" + t.getBookIsbn(),
-                t.getMemberName() + "\n" + t.getMemberId(),
+                t.getBookTitle(),
+                t.getBookIsbn(),      // ISBN in separate column
+                t.getMemberName(),
+                t.getMemberId(),      // Member ID in separate column
                 t.getIssueDate(),
                 t.getDueDate(),
                 t.getReturnDate(),
@@ -654,18 +657,10 @@ public class Dashboard extends javax.swing.JFrame {
         }
     }
 
-    // ========== SEARCH TRANSACTION METHOD ==========
-    private void searchTransaction() {
-        String query = TransactionSearchBar1.getText().toLowerCase();
-        DefaultTableModel model = (DefaultTableModel) TransactionTable1.getModel();
-        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
-        TransactionTable1.setRowSorter(sorter);
-        sorter.setRowFilter(RowFilter.regexFilter("(?i)" + query));
-    }
 
     // ========== SETUP TRANSACTION ACTION BUTTONS ==========
     private void setupTransactionActionButtons() {
-        TableColumn actionColumn = TransactionTable1.getColumnModel().getColumn(6);
+        TableColumn actionColumn = TransactionTable1.getColumnModel().getColumn(8);
 
         ReturnButtonRenderer buttonRenderer = new ReturnButtonRenderer();
         actionColumn.setCellRenderer(buttonRenderer);
@@ -681,7 +676,7 @@ public class Dashboard extends javax.swing.JFrame {
             }
         };
 
-        ReturnButtonRenderer.addClickListener(TransactionTable1, 6, handler);
+        ReturnButtonRenderer.addClickListener(TransactionTable1, 8, handler);
 
         TransactionTable1.putClientProperty("JTable.autoStartsEdit", Boolean.FALSE);
     }
@@ -691,14 +686,11 @@ public class Dashboard extends javax.swing.JFrame {
         if (row < 0) return;
 
         DefaultTableModel model = (DefaultTableModel) TransactionTable1.getModel();
-        String bookInfo = model.getValueAt(row, 0).toString();
-        String memberInfo = model.getValueAt(row, 1).toString();
 
-        String[] bookParts = bookInfo.split("\n");
-        String isbn = bookParts.length > 1 ? bookParts[1] : "";
-
-        String[] memberParts = memberInfo.split("\n");
-        String memberId = memberParts.length > 1 ? memberParts[1] : "";
+        // Get ISBN and Member ID directly from their columns
+        String isbn = model.getValueAt(row, 1).toString();      // Column 1 = ISBN
+        String memberId = model.getValueAt(row, 3).toString();  // Column 3 = Member ID
+        String bookTitle = model.getValueAt(row, 0).toString(); // Column 0 = Book Title
 
         int confirm = JOptionPane.showConfirmDialog(
             this,
@@ -713,7 +705,7 @@ public class Dashboard extends javax.swing.JFrame {
             String returnDate = today.format(formatter);
 
             if (TransactionDataManager.updateTransaction(isbn, memberId, returnDate)) {
-                Book book = BookDataManager.findBookByTitle(bookParts[0]);
+                Book book = BookDataManager.findBookByTitle(bookTitle);
                 if (book != null) {
                     book.setAvailableCopies(book.getAvailableCopies() + 1);
                     book.setStatus("Available");
@@ -722,12 +714,9 @@ public class Dashboard extends javax.swing.JFrame {
 
                 JOptionPane.showMessageDialog(this, "✅ Book returned successfully!");
 
-                // Just reload the table data - buttons will update automatically
                 loadTransactionsToTable();
                 loadBooksToTable();
 
-                // NO need to call setupTransactionActionButtons() again!
-                // The mouse listener is persistent and will continue working
             } else {
                 JOptionPane.showMessageDialog(this, "Failed to return book.", 
                                             "Error", JOptionPane.ERROR_MESSAGE);
@@ -737,7 +726,6 @@ public class Dashboard extends javax.swing.JFrame {
 
 //======================================================================================================================================================
 
-    // ========== SETUP REPORTS PANEL ==========
     // ========== SETUP REPORTS PANEL ==========
     private void setupReportsPanel() {
         // Setup stat cards with fixed sizes
@@ -891,8 +879,8 @@ public class Dashboard extends javax.swing.JFrame {
         model.setRowCount(0);
 
         List<Transaction> transactions = TransactionDataManager.loadTransactions();
-
-        for (Transaction t : transactions) {
+        for (int i = transactions.size() - 1; i >= 0; i--) {
+            Transaction t = transactions.get(i);
             model.addRow(new Object[]{
                 t.getBookTitle(),
                 t.getMemberName(),
@@ -981,11 +969,177 @@ public class Dashboard extends javax.swing.JFrame {
     }
 
 
+    //======================================================================================================================================================
+    
+    
+    // ================= SEARCH BAR HELPER =================
+    private void setupSearchBar(JTextField field, String placeholder) {
+        field.setText(placeholder);
+        field.setForeground(new Color(150, 150, 150)); // gray placeholder text
+        field.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        field.setBackground(new Color(245, 239, 231)); // match your panel color
+        field.setFocusable(true);
+
+        field.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent e) {
+                if (field.getText().equals(placeholder)) {
+                    field.setText("");
+                    field.setForeground(new Color(50, 50, 50)); // normal text color
+                }
+            }
+
+            @Override
+            public void focusLost(java.awt.event.FocusEvent e) {
+                if (field.getText().isEmpty()) {
+                    field.setText(placeholder);
+                    field.setForeground(new Color(150, 150, 150));
+                }
+            }
+        });
+    }
+    
+
+    private void setupGlobalClickListener() {
+    // Create a global mouse listener that will be added to all components
+        java.awt.event.MouseAdapter globalClickListener = new java.awt.event.MouseAdapter() {
+            @Override
+            public void mousePressed(java.awt.event.MouseEvent e) {
+                java.awt.Component clickedComponent = e.getComponent();
+
+                // Check if the clicked component is NOT one of the search bars
+                if (clickedComponent != MemberSearchBar && 
+                    clickedComponent != BookSearchBar && 
+                    clickedComponent != TransactionSearchBar1) {
+
+                    // Request focus on the main frame to remove focus from search bars
+                    Dashboard.this.requestFocusInWindow();
+                }
+            }
+        };
+
+        // Add the listener to all components recursively
+        addMouseListenerRecursively(this.getContentPane(), globalClickListener);
+    }
+
+    // Helper method to add mouse listener to all components recursively
+    private void addMouseListenerRecursively(java.awt.Container container, java.awt.event.MouseListener listener) {
+        container.addMouseListener(listener);
+
+        for (java.awt.Component component : container.getComponents()) {
+            component.addMouseListener(listener);
+
+            if (component instanceof java.awt.Container) {
+                addMouseListenerRecursively((java.awt.Container) component, listener);
+            }
+        }
+    }
 
 
+//========== IMPROVED SEARCH FILTER FOR MEMBERS ==========
+private void searchMember() {
+    String query = MemberSearchBar.getText().toLowerCase().trim();
+    
+    // Don't search if it's just the placeholder text
+    if (query.equals("search members...") || query.isEmpty()) {
+        MemberTable.setRowSorter(null);
+        return;
+    }
+    
+    DefaultTableModel model = (DefaultTableModel) MemberTable.getModel();
+    TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
+    MemberTable.setRowSorter(sorter);
+    
+    // Search across Member ID (0), Name (1), Email (2), Phone (3)
+    RowFilter<DefaultTableModel, Object> rf = new RowFilter<DefaultTableModel, Object>() {
+        @Override
+        public boolean include(Entry<? extends DefaultTableModel, ? extends Object> entry) {
+            String memberId = entry.getStringValue(0).toLowerCase();
+            String name = entry.getStringValue(1).toLowerCase();
+            String email = entry.getStringValue(2).toLowerCase();
+            String phone = entry.getStringValue(3).toLowerCase();
+            
+            return memberId.contains(query) || 
+                   name.contains(query) || 
+                   email.contains(query) || 
+                   phone.contains(query);
+        }
+    };
+    
+    sorter.setRowFilter(rf);
+}
 
+//========== IMPROVED SEARCH FILTER FOR BOOKS ==========
+private void searchBook() {
+    String query = BookSearchBar.getText().toLowerCase().trim();
+    
+    // Don't search if it's just the placeholder text
+    if (query.equals("search books...") || query.isEmpty()) {
+        BooksTable.setRowSorter(null);
+        return;
+    }
+    
+    DefaultTableModel model = (DefaultTableModel) BooksTable.getModel();
+    TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
+    BooksTable.setRowSorter(sorter);
+    
+    // Search across Title (0), Author (1), ISBN (2), Category (3)
+    RowFilter<DefaultTableModel, Object> rf = new RowFilter<DefaultTableModel, Object>() {
+        @Override
+        public boolean include(Entry<? extends DefaultTableModel, ? extends Object> entry) {
+            String title = entry.getStringValue(0).toLowerCase();
+            String author = entry.getStringValue(1).toLowerCase();
+            String isbn = entry.getStringValue(2).toLowerCase();
+            String category = entry.getStringValue(3).toLowerCase();
+            
+            return title.contains(query) || 
+                   author.contains(query) || 
+                   isbn.contains(query) || 
+                   category.contains(query);
+        }
+    };
+    
+    sorter.setRowFilter(rf);
+}
 
+    //========== IMPROVED SEARCH FILTER FOR TRANSACTIONS ==========
+    private void searchTransaction() {
+        String query = TransactionSearchBar1.getText().toLowerCase().trim();
 
+        // Don't search if it's just the placeholder text
+        if (query.equals("search transactions...") || query.isEmpty()) {
+            TransactionTable1.setRowSorter(null);
+            return;
+        }
+
+        DefaultTableModel model = (DefaultTableModel) TransactionTable1.getModel();
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
+        TransactionTable1.setRowSorter(sorter);
+
+        // Search across Book Title (0), ISBN (1), Member Name (2), Issue Date (3), Due Date (4), Return Date (5), Status (6)
+        RowFilter<DefaultTableModel, Object> rf = new RowFilter<DefaultTableModel, Object>() {
+            @Override
+            public boolean include(Entry<? extends DefaultTableModel, ? extends Object> entry) {
+                String bookTitle = entry.getStringValue(0).toLowerCase();
+                String isbn = entry.getStringValue(1).toLowerCase();
+                String memberName = entry.getStringValue(2).toLowerCase();
+                String issueDate = entry.getStringValue(3).toLowerCase();
+                String dueDate = entry.getStringValue(4).toLowerCase();
+                String returnDate = entry.getStringValue(5).toLowerCase();
+                String status = entry.getStringValue(6).toLowerCase();
+
+                return bookTitle.contains(query) || 
+                       isbn.contains(query) || 
+                       memberName.contains(query) ||
+                       issueDate.contains(query) ||
+                       dueDate.contains(query) ||
+                       returnDate.contains(query) ||
+                       status.contains(query);
+            }
+        };
+
+        sorter.setRowFilter(rf);
+    }
 
 
 
@@ -1438,15 +1592,15 @@ public class Dashboard extends javax.swing.JFrame {
             new Object [][] {
             }, // **Change this line to an empty array: new Object [][] {}**
             new String [] {
-                "Book", "Member", "Issue Date", "Due Date", "Return Date", "Status", "Actions"
+                "Book", "ISBN", "Member", "Member ID", "Issue Date", "Due Date", "Return Date", "Status", "Actions"
             }) {
                 Class[] types = new Class [] {
                     java.lang.String.class, java.lang.String.class, java.lang.String.class,
                     java.lang.String.class, java.lang.String.class, java.lang.String.class,
-                    java.lang.String.class
+                    java.lang.String.class, java.lang.String.class, java.lang.String.class
                 };
                 boolean[] canEdit = new boolean [] {
-                    false, false, false, false, false, false, true
+                    false, false, false, false, false, false, false, false, true
                 };
 
                 public Class getColumnClass(int columnIndex) {
@@ -1626,26 +1780,24 @@ public class Dashboard extends javax.swing.JFrame {
                         .addGap(129, 129, 129)
                         .addGroup(ReportsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(ReportsPanelLayout.createSequentialGroup()
+                                .addComponent(jLabel14)
+                                .addGap(0, 0, Short.MAX_VALUE))
+                            .addGroup(ReportsPanelLayout.createSequentialGroup()
                                 .addGroup(ReportsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(jLabel12)
-                                    .addComponent(jLabel11))
-                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                            .addGroup(ReportsPanelLayout.createSequentialGroup()
-                                .addGroup(ReportsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                    .addComponent(jScrollPane4, javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, ReportsPanelLayout.createSequentialGroup()
-                                        .addComponent(TotalBooks, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                        .addComponent(TotalsMembers, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                        .addComponent(TotalTransactions, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                        .addComponent(OverdueBooks, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addComponent(BookandbyCategory, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 1116, Short.MAX_VALUE))
-                                .addGap(2, 135, Short.MAX_VALUE))
-                            .addGroup(ReportsPanelLayout.createSequentialGroup()
-                                .addComponent(jLabel14)
-                                .addGap(0, 0, Short.MAX_VALUE))))
+                                    .addComponent(jLabel11)
+                                    .addGroup(ReportsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                        .addComponent(jScrollPane4, javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, ReportsPanelLayout.createSequentialGroup()
+                                            .addComponent(TotalBooks, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                            .addComponent(TotalsMembers, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                            .addComponent(TotalTransactions, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                            .addComponent(OverdueBooks, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addComponent(BookandbyCategory, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 1116, Short.MAX_VALUE)))
+                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                 );
                 ReportsPanelLayout.setVerticalGroup(
                     ReportsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1798,7 +1950,6 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel11;
     private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel7;
     private javax.swing.JPanel jPanel9;
     private javax.swing.JScrollPane jScrollPane1;

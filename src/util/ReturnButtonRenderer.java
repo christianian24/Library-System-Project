@@ -27,7 +27,7 @@ public class ReturnButtonRenderer implements TableCellRenderer {
     public Component getTableCellRendererComponent(JTable table, Object value,
             boolean isSelected, boolean hasFocus, int row, int column) {
         
-        String status = table.getValueAt(row, 5).toString();
+        String status = table.getValueAt(row, 7).toString();
         
         if ("Active".equals(status)) {
             button.setText("Return");
@@ -39,7 +39,6 @@ public class ReturnButtonRenderer implements TableCellRenderer {
             button.setEnabled(false);            
             button.setBackground(new Color(238, 238, 238));
             button.setForeground(new Color(100, 100, 100));
-            
         }
         
         panel.setBackground(Color.WHITE);
@@ -56,7 +55,8 @@ public class ReturnButtonRenderer implements TableCellRenderer {
                 int row = table.rowAtPoint(e.getPoint());
                 
                 if (row >= 0 && column == columnIndex) {
-                    String status = table.getValueAt(row, 5).toString();
+                    // ✅ FIXED: Changed from column 5 to column 7 for status
+                    String status = table.getValueAt(row, 7).toString();
                     if ("Active".equals(status)) {
                         handler.onReturn(row);
                     }
