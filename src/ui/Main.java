@@ -304,7 +304,7 @@ public class Main extends javax.swing.JFrame {
 
     // ✅ Check if a role is selected
     if (selectedRole.isEmpty()) {
-        util.AlertUtil.showRoundedToastTopRight(this, "Please select a role first!", new java.awt.Color(132, 153, 122));
+        util.AlertUtil.showRoundedToastTopRight(this, "Please select a role first!", new java.awt.Color(196, 160, 77));
         return;
     }
 
@@ -312,24 +312,24 @@ public class Main extends javax.swing.JFrame {
     User user = UserDataManager.authenticate(email, password);
 
     if (user == null) {
-        util.AlertUtil.showRoundedToastTopRight(this, "Invalid credentials!", new java.awt.Color(132, 153, 122));
+        util.AlertUtil.showRoundedToastTopRight(this, "Invalid credentials!", new java.awt.Color(174, 68, 68));
         return;
     }
 
     // 🔸 Check if role matches what was selected
     if (!user.getRole().equalsIgnoreCase(selectedRole)) {
-        util.AlertUtil.showRoundedToastTopRight(this, "Role mismatch! Try selecting the correct role.", new java.awt.Color(231, 76, 60));
+        util.AlertUtil.showRoundedToastTopRight(this, "Role mismatch! Try selecting the correct role.", new java.awt.Color(174, 68, 68));
         return;
     }
 
     if (user.getRole().equalsIgnoreCase("admin")) {
-        util.AlertUtil.showRoundedToastTopRight(this, "Welcome Admin!", new java.awt.Color(46, 204, 113));
+        util.AlertUtil.showRoundedToastTopRight(this, "Welcome Admin!", new java.awt.Color(132, 153, 122));
         Dashboard dashboard = new Dashboard();
         dashboard.setLocationRelativeTo(null);
         dashboard.setVisible(true);
         this.dispose();
     } else {
-        util.AlertUtil.showRoundedToastTopRight(this, "Login successful!", new java.awt.Color(46, 204, 113));
+        util.AlertUtil.showRoundedToastTopRight(this, "Login successful!", new java.awt.Color(132, 153, 122));
         StudentFrame studentFrame = new StudentFrame();
         studentFrame.setLocationRelativeTo(null);
         studentFrame.setVisible(true);

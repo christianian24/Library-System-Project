@@ -8,6 +8,10 @@ import javax.swing.table.*;
 public class TableStyleUtil {
 
     public static void styleModernTable(JTable table, JScrollPane scrollPane) {
+        styleModernTable(table, scrollPane, new int[]{});
+    }
+    
+    public static void styleModernTable(JTable table, JScrollPane scrollPane, int[] skipColumns) {
         // --- Scroll Pane & Table Setup ---
         scrollPane.getViewport().setBackground(new Color(245, 239, 231));
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
@@ -24,11 +28,11 @@ public class TableStyleUtil {
         table.getTableHeader().setReorderingAllowed(false);
         
         // ✅ Disable row selection highlight
-        table.setSelectionBackground(new Color(250, 250, 250));  // Same as panel background
-        table.setSelectionForeground(new Color(50, 50, 50));     // Same as text color
+        table.setSelectionBackground(new Color(250, 250, 250));
+        table.setSelectionForeground(new Color(50, 50, 50));
 
         // --- Custom Cell Renderer (Row Styling) ---
-        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+        DefaultTableCellRenderer defaultRenderer = new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(
                     JTable tbl, Object value, boolean isSelected,
@@ -49,7 +53,21 @@ public class TableStyleUtil {
 
                 return c;
             }
-        });
+        };
+        
+        // Apply renderer to each column individually, skipping specified columns
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            boolean shouldSkip = false;
+            for (int skipCol : skipColumns) {
+                if (i == skipCol) {
+                    shouldSkip = true;
+                    break;
+                }
+            }
+            if (!shouldSkip) {
+                table.getColumnModel().getColumn(i).setCellRenderer(defaultRenderer);
+            }
+        }
 
         // --- Header Styling ---
         JTableHeader header = table.getTableHeader();

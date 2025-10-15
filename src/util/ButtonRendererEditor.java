@@ -5,7 +5,7 @@ import javax.swing.*;
 import javax.swing.table.*;
 
 public class ButtonRendererEditor extends AbstractCellEditor implements TableCellRenderer, TableCellEditor {
-    private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 0));
+    private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 5));
     private final JButton editButton = new JButton("Edit");
     private final JButton deleteButton = new JButton("Delete");
     private int editingRow = -1;
@@ -61,6 +61,8 @@ public class ButtonRendererEditor extends AbstractCellEditor implements TableCel
         } else {
             panel.setBackground(Color.WHITE);
         }
+        editButton.setVisible(true);
+        deleteButton.setVisible(true);
         return panel;
     }
 
@@ -70,9 +72,13 @@ public class ButtonRendererEditor extends AbstractCellEditor implements TableCel
         editingRow = row;
         currentTable = table;
         panel.setBackground(new Color(250, 250, 250));
+        editButton.setVisible(true);
+        deleteButton.setVisible(true);
         return panel;
     }
-
+    
+    
+    
     @Override
     public Object getCellEditorValue() {
         return "";

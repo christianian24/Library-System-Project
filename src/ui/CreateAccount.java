@@ -44,7 +44,7 @@ public class CreateAccount extends javax.swing.JFrame {
                     util.AlertUtil.showRoundedToastTopRight(
                         CreateAccount.this,
                         "Please enter numbers only.",
-                        new Color(132, 153, 122)
+                        new Color(196, 160, 77)
                     );
                     return;
                 }
@@ -55,7 +55,7 @@ public class CreateAccount extends javax.swing.JFrame {
                     util.AlertUtil.showRoundedToastTopRight(
                         CreateAccount.this,
                         "Mobile number must be 11 digits only.",
-                        new Color(132, 153, 122) 
+                        new Color(196, 160, 77) 
                     );
                 }
             }
@@ -469,22 +469,22 @@ public class CreateAccount extends javax.swing.JFrame {
 
     // 🔸 Validation checks
     if (first.isEmpty() || last.isEmpty() || email.isEmpty() || mobile.isEmpty() || pass.isEmpty() || repass.isEmpty()) {
-        util.AlertUtil.showRoundedToastTopRight(this, "All fields are required!", new java.awt.Color(132, 153, 122));
+        util.AlertUtil.showRoundedToastTopRight(this, "All fields are required!", new java.awt.Color(196, 160, 77));
         return;
     }
 
     if (!pass.equals(repass)) {
-        util.AlertUtil.showRoundedToastTopRight(this, "Passwords do not match!", new java.awt.Color(132, 153, 122));
+        util.AlertUtil.showRoundedToastTopRight(this, "Passwords do not match!", new java.awt.Color(196, 160, 77));
         return;
     }
 
     if (!email.contains("@") || !email.contains(".")) {
-        util.AlertUtil.showRoundedToastTopRight(this, "Invalid email format!", new java.awt.Color(132, 153, 122));
+        util.AlertUtil.showRoundedToastTopRight(this, "Invalid email format!", new java.awt.Color(174, 68, 68));
         return;
     }
 
     if (mobile.length() != 11 || !mobile.matches("\\d+")) {
-        util.AlertUtil.showRoundedToastTopRight(this, "Mobile number must be 11 digits.", new java.awt.Color(132, 153, 122));
+        util.AlertUtil.showRoundedToastTopRight(this, "Mobile number must be 11 digits.", new java.awt.Color(196, 160, 77));
         return;
     }
 
@@ -495,7 +495,7 @@ public class CreateAccount extends javax.swing.JFrame {
     boolean success = data.UserDataManager.addUser(user);
 
     if (success) {
-        util.AlertUtil.showRoundedToastTopRight(this, "Account created successfully!", new java.awt.Color(144, 166, 133));
+        util.AlertUtil.showRoundedToastTopRight(this, "Account created successfully!", new java.awt.Color(132, 153, 122));
 
         // Reset fields
         txtFirstname.setText("First name");
