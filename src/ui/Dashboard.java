@@ -30,6 +30,10 @@ import java.awt.GridBagLayout;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import java.awt.Color;
+
+import util.ModernConfirm;
+import util.ModernDialog;
+import util.ModernNotification;
 /**
  *
  * @Cabilen
@@ -134,38 +138,33 @@ public class Dashboard extends javax.swing.JFrame {
 
     //========== Add New Member ==========
     private void addMember() {
-        JTextField idField = new JTextField();
-        JTextField nameField = new JTextField();
-        JTextField emailField = new JTextField();
-        JTextField phoneField = new JTextField();
+        ModernDialog dialog = new ModernDialog.Builder(this, "Add New Member", "Fill in the member information")
+            .addTextField("id", "Member ID", "", true)
+            .addTextField("name", "Full Name", "", true)
+            .addTextField("email", "Email Address", "", true)
+            .addTextField("phone", "Phone Number", "", true)
+            .build();
 
-        JPanel panel = new JPanel(new java.awt.GridLayout(0, 1));
-        panel.add(new JLabel("Member ID:"));
-        panel.add(idField);
-        panel.add(new JLabel("Name:"));
-        panel.add(nameField);
-        panel.add(new JLabel("Email:"));
-        panel.add(emailField);
-        panel.add(new JLabel("Phone:"));
-        panel.add(phoneField);
+        if (dialog.showDialog()) {
+            String id = dialog.getTextFieldValue("id");
+            String name = dialog.getTextFieldValue("name");
+            String email = dialog.getTextFieldValue("email");
+            String phone = dialog.getTextFieldValue("phone");
 
-        int result = JOptionPane.showConfirmDialog(this, panel, "Add New Member", JOptionPane.OK_CANCEL_OPTION);
-        if (result == JOptionPane.OK_OPTION) {
+            if (id.isEmpty() || name.isEmpty() || email.isEmpty() || phone.isEmpty()) {
+                ModernNotification.warning(this, "All fields are required!");
+                return;
+            }
+
             String date = new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date());
-            Member newMember = new Member(
-                    idField.getText(),
-                    nameField.getText(),
-                    emailField.getText(),
-                    phoneField.getText(),
-                    date
-            );
+            Member newMember = new Member(id, name, email, phone, date);
 
             boolean success = MemberDataManager.addMember(newMember);
             if (success) {
-                JOptionPane.showMessageDialog(this, "✅ Member added successfully!");
+                ModernNotification.success(this, "Member added successfully!");
                 loadMembersToTable();
             } else {
-                JOptionPane.showMessageDialog(this, "⚠️ Duplicate email or phone number found.");
+                ModernNotification.error(this, "Duplicate email or phone number found.");
             }
         }
     }
@@ -207,42 +206,30 @@ public class Dashboard extends javax.swing.JFrame {
         String name = model.getValueAt(row, 1).toString();
         String email = model.getValueAt(row, 2).toString();
         String phone = model.getValueAt(row, 3).toString();
-        String address = model.getValueAt(row, 4).toString();
+        String memberSince = model.getValueAt(row, 4).toString();
 
-        JTextField nameField = new JTextField(name);
-        JTextField emailField = new JTextField(email);
-        JTextField phoneField = new JTextField(phone);
-        JTextField addressField = new JTextField(address);
+        ModernDialog dialog = new ModernDialog.Builder(this, "Edit Member", "Update member information")
+            .addTextField("id", "Member ID (Cannot be changed)", id, false)
+            .addTextField("name", "Full Name", name, true)
+            .addTextField("email", "Email Address", email, true)
+            .addTextField("phone", "Phone Number", phone, true)
+            .addTextField("memberSince", "Member Since", memberSince, false)
+            .build();
 
-        JPanel panel = new JPanel(new java.awt.GridLayout(0, 1));
-        panel.setBackground(new java.awt.Color(230, 216, 195));
-        panel.add(new JLabel("Name:"));
-        panel.add(nameField);
-        panel.add(new JLabel("Email:"));
-        panel.add(emailField);
-        panel.add(new JLabel("Phone:"));
-        panel.add(phoneField);
-        panel.add(new JLabel("Address:"));
-        panel.add(addressField);
-
-        int result = JOptionPane.showConfirmDialog(
-                this, panel, "Edit Member", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE
-        );
-
-        if (result == JOptionPane.OK_OPTION) {
+        if (dialog.showDialog()) {
             Member updatedMember = new Member(
-                    id,
-                    nameField.getText().trim(),
-                    emailField.getText().trim(),
-                    phoneField.getText().trim(),
-                    addressField.getText().trim()
+                id,
+                dialog.getTextFieldValue("name"),
+                dialog.getTextFieldValue("email"),
+                dialog.getTextFieldValue("phone"),
+                memberSince
             );
 
             if (MemberDataManager.updateMember(updatedMember)) {
-                JOptionPane.showMessageDialog(this, "Member updated successfully!");
+                ModernNotification.success(this, "Member updated successfully!");
                 loadMembersToTable();
             } else {
-                JOptionPane.showMessageDialog(this, "Failed to update member.", "Error", JOptionPane.ERROR_MESSAGE);
+                ModernNotification.error(this, "Failed to update member.");
             }
         }
     }
@@ -252,19 +239,23 @@ public class Dashboard extends javax.swing.JFrame {
         if (row < 0) return;
         DefaultTableModel model = (DefaultTableModel) MemberTable.getModel();
         String id = model.getValueAt(row, 0).toString();
+        String name = model.getValueAt(row, 1).toString();
 
-        int confirm = JOptionPane.showConfirmDialog(
-                this, "Are you sure you want to delete this member?", "Confirm Delete", JOptionPane.YES_NO_OPTION
+        boolean confirmed = ModernConfirm.show(
+            this,
+            "Delete Member",
+            "Are you sure you want to delete '" + name +
+                    "'? This action cannot be undone."
         );
 
-        if (confirm == JOptionPane.YES_OPTION) {
+        if (confirmed) {
             if (MemberDataManager.deleteMember(id)) {
-                JOptionPane.showMessageDialog(this, "Member deleted successfully!");
+                ModernNotification.success(this, "Member deleted successfully!");
                 loadMembersToTable();
             } else {
-                JOptionPane.showMessageDialog(this, "Failed to delete member.", "Error", JOptionPane.ERROR_MESSAGE);
+                ModernNotification.error(this, "Failed to delete member.");
             }
-        }  
+        }
     }
 
 
@@ -293,91 +284,53 @@ public class Dashboard extends javax.swing.JFrame {
 
     // ========== ADD NEW BOOK METHOD ==========
     private void addBook() {
-        JTextField titleField = new JTextField();
-        JTextField authorField = new JTextField();
-        JTextField isbnField = new JTextField();
-        JTextField totalCopiesField = new JTextField();
-
-        // Create ComboBox for genres
         String[] genres = {
-            "Fiction",
-            "Non-Fiction",
-            "Science",
-            "History",
-            "Biography",
-            "Fantasy",
-            "Mystery",
-            "Romance",
-            "Thriller",
-            "Self-Help",
-            "Technology",
-            "Business",
-            "Philosophy",
-            "Poetry",
-            "Other"
+            "Fiction", "Non-Fiction", "Science", "History", "Biography",
+            "Fantasy", "Mystery", "Romance", "Thriller", "Self-Help",
+            "Technology", "Business", "Philosophy", "Poetry", "Other"
         };
-        JComboBox<String> categoryComboBox = new JComboBox<>(genres);
-        categoryComboBox.setBackground(new java.awt.Color(245, 239, 231));
 
-        JPanel panel = new JPanel(new java.awt.GridLayout(0, 1, 5, 5));
-        panel.setBackground(new java.awt.Color(230, 216, 195));
+        ModernDialog dialog = new ModernDialog.Builder(this, "Add New Book", "Enter book details")
+            .addTextField("title", "Book Title", "", true)
+            .addTextField("author", "Author Name", "", true)
+            .addTextField("isbn", "ISBN Number", "", true)
+            .addComboBox("category", "Category/Genre", genres, null)
+            .addTextField("copies", "Total Copies", "1", true)
+            .build();
 
-        panel.add(new JLabel("Title:"));
-        panel.add(titleField);
-        panel.add(new JLabel("Author:"));
-        panel.add(authorField);
-        panel.add(new JLabel("ISBN:"));
-        panel.add(isbnField);
-        panel.add(new JLabel("Category/Genre:"));
-        panel.add(categoryComboBox);
-        panel.add(new JLabel("Total Copies:"));
-        panel.add(totalCopiesField);
+        if (dialog.showDialog()) {
+            String title = dialog.getTextFieldValue("title");
+            String author = dialog.getTextFieldValue("author");
+            String isbn = dialog.getTextFieldValue("isbn");
+            String category = dialog.getComboBoxValue("category");
+            String copiesStr = dialog.getTextFieldValue("copies");
 
-        int result = JOptionPane.showConfirmDialog(
-            this, 
-            panel, 
-            "Add New Book", 
-            JOptionPane.OK_CANCEL_OPTION,
-            JOptionPane.PLAIN_MESSAGE
-        );
+            if (title.isEmpty() || author.isEmpty() || isbn.isEmpty() || copiesStr.isEmpty()) {
+                ModernNotification.warning(this, "All fields are required!");
+                return;
+            }
 
-        if (result == JOptionPane.OK_OPTION) {
             try {
-                // Validate input
-                if (titleField.getText().trim().isEmpty() || 
-                    authorField.getText().trim().isEmpty() || 
-                    isbnField.getText().trim().isEmpty() ||
-                    totalCopiesField.getText().trim().isEmpty()) {
-                    JOptionPane.showMessageDialog(this, "⚠️ All fields are required!");
-                    return;
-                }
-
-                int copies = Integer.parseInt(totalCopiesField.getText().trim());
+                int copies = Integer.parseInt(copiesStr);
                 if (copies <= 0) {
-                    JOptionPane.showMessageDialog(this, "⚠️ Total copies must be greater than 0!");
+                    ModernNotification.warning(this, "Total copies must be greater than 0!");
                     return;
                 }
 
-                Book newBook = new Book(
-                    titleField.getText().trim(),
-                    authorField.getText().trim(),
-                    isbnField.getText().trim(),
-                    categoryComboBox.getSelectedItem().toString(),
-                    copies
-                );
+                Book newBook = new Book(title, author, isbn, category, copies);
 
-                boolean success = BookDataManager.addBook(newBook);
-                if (success) {
-                    JOptionPane.showMessageDialog(this, "✅ Book added successfully!");
+                if (BookDataManager.addBook(newBook)) {
+                    ModernNotification.success(this, "Book added successfully!");
                     loadBooksToTable();
                 } else {
-                    JOptionPane.showMessageDialog(this, "⚠️ Failed to add book. ISBN may already exist.");
+                    ModernNotification.error(this, "Failed to add book. ISBN may already exist.");
                 }
             } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(this, "⚠️ Please enter a valid number for Total Copies!");
+                ModernNotification.warning(this, "Please enter a valid number for Total Copies!");
             }
         }
     }
+
 
 
     // ========== SETUP BOOKS ACTION BUTTONS ==========
@@ -404,9 +357,6 @@ public class Dashboard extends javax.swing.JFrame {
         BooksTable.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
     }
 
-    // ========== EDIT BOOK METHOD ==========
-    // Replace your existing editBook() method with this improved version
-
 // ========== EDIT BOOK METHOD WITH GENRE DROPDOWN ==========
     private void editBook(int row) {
         if (row < 0) return;
@@ -420,91 +370,47 @@ public class Dashboard extends javax.swing.JFrame {
         String availableCopies = model.getValueAt(row, 5).toString();
         String status = model.getValueAt(row, 6).toString();
 
-        JTextField titleField = new JTextField(title);
-        JTextField authorField = new JTextField(author);
-        JTextField isbnField = new JTextField(isbn);
-        isbnField.setEditable(false); // ISBN shouldn't be changed
-        isbnField.setBackground(new java.awt.Color(220, 220, 220));
-
-        JTextField totalCopiesField = new JTextField(totalCopies);
-        JTextField availableCopiesField = new JTextField(availableCopies);
-        JTextField statusField = new JTextField(status);
-        statusField.setEditable(false); // Status is auto-calculated
-        statusField.setBackground(new java.awt.Color(220, 220, 220));
-
-        // Create ComboBox for genres with current category selected
         String[] genres = {
-            "Fiction",
-            "Non-Fiction",
-            "Science",
-            "History",
-            "Biography",
-            "Fantasy",
-            "Mystery",
-            "Romance",
-            "Thriller",
-            "Self-Help",
-            "Technology",
-            "Business",
-            "Philosophy",
-            "Poetry",
-            "Other"
+            "Fiction", "Non-Fiction", "Science", "History", "Biography",
+            "Fantasy", "Mystery", "Romance", "Thriller", "Self-Help",
+            "Technology", "Business", "Philosophy", "Poetry", "Other"
         };
-        JComboBox<String> categoryComboBox = new JComboBox<>(genres);
-        categoryComboBox.setBackground(new java.awt.Color(245, 239, 231));
-        categoryComboBox.setSelectedItem(category); // Set current category
 
-        JPanel panel = new JPanel(new java.awt.GridLayout(0, 1, 5, 5));
-        panel.setBackground(new java.awt.Color(230, 216, 195));
+        ModernDialog dialog = new ModernDialog.Builder(this, "Edit Book", "Update book information")
+            .addTextField("title", "Book Title", title, true)
+            .addTextField("author", "Author Name", author, true)
+            .addTextField("isbn", "ISBN Number (Cannot be changed)", isbn, false)
+            .addComboBox("category", "Category/Genre", genres, category)
+            .addTextField("totalCopies", "Total Copies", totalCopies, true)
+            .addTextField("availableCopies", "Available Copies", availableCopies, true)
+            .addTextField("status", "Status (Auto-calculated)", status, false)
+            .build();
 
-        panel.add(new JLabel("Title:"));
-        panel.add(titleField);
-        panel.add(new JLabel("Author:"));
-        panel.add(authorField);
-        panel.add(new JLabel("ISBN: (Cannot be changed)"));
-        panel.add(isbnField);
-        panel.add(new JLabel("Category/Genre:"));
-        panel.add(categoryComboBox);
-        panel.add(new JLabel("Total Copies:"));
-        panel.add(totalCopiesField);
-        panel.add(new JLabel("Available Copies:"));
-        panel.add(availableCopiesField);
-        panel.add(new JLabel("Status: (Auto-calculated)"));
-        panel.add(statusField);
-
-        int result = JOptionPane.showConfirmDialog(
-            this, 
-            panel, 
-            "Edit Book", 
-            JOptionPane.OK_CANCEL_OPTION,
-            JOptionPane.PLAIN_MESSAGE
-        );
-
-        if (result == JOptionPane.OK_OPTION) {
+        if (dialog.showDialog()) {
             try {
-                int total = Integer.parseInt(totalCopiesField.getText().trim());
+                int total = Integer.parseInt(dialog.getTextFieldValue("totalCopies"));
 
                 if (total <= 0) {
-                    JOptionPane.showMessageDialog(this, "⚠️ Total copies must be greater than 0!");
+                    ModernNotification.warning(this, "Total copies must be greater than 0!");
                     return;
                 }
 
                 Book updatedBook = new Book(
-                    titleField.getText().trim(),
-                    authorField.getText().trim(),
-                    isbnField.getText().trim(),
-                    categoryComboBox.getSelectedItem().toString(),
+                    dialog.getTextFieldValue("title"),
+                    dialog.getTextFieldValue("author"),
+                    isbn,
+                    dialog.getComboBoxValue("category"),
                     total
                 );
 
                 if (BookDataManager.updateBook(updatedBook)) {
-                    JOptionPane.showMessageDialog(this, "✅ Book updated successfully!");
+                    ModernNotification.success(this, "Book updated successfully!");
                     loadBooksToTable();
                 } else {
-                    JOptionPane.showMessageDialog(this, "⚠️ Failed to update book.", "Error", JOptionPane.ERROR_MESSAGE);
+                    ModernNotification.error(this, "Failed to update book.");
                 }
             } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(this, "⚠️ Please enter a valid number for Total Copies!");
+                ModernNotification.warning(this, "Please enter a valid number for Total Copies!");
             }
         }
     }
@@ -515,16 +421,18 @@ public class Dashboard extends javax.swing.JFrame {
         DefaultTableModel model = (DefaultTableModel) BooksTable.getModel();
         String title = model.getValueAt(row, 0).toString();
 
-        int confirm = JOptionPane.showConfirmDialog(
-                this, "Are you sure you want to delete this book?", "Confirm Delete", JOptionPane.YES_NO_OPTION
+        boolean confirmed = ModernConfirm.show(
+            this,
+            "Delete Book",
+            "Are you sure you want to delete '" + title + "'? This action cannot be undone."
         );
 
-        if (confirm == JOptionPane.YES_OPTION) {
+        if (confirmed) {
             if (BookDataManager.deleteBook(title)) {
-                JOptionPane.showMessageDialog(this, "Book deleted successfully!");
+                ModernNotification.success(this, "Book deleted successfully!");
                 loadBooksToTable();
             } else {
-                JOptionPane.showMessageDialog(this, "Failed to delete book.", "Error", JOptionPane.ERROR_MESSAGE);
+                ModernNotification.error(this, "Failed to delete book.");
             }
         }
     }
@@ -557,48 +465,46 @@ public class Dashboard extends javax.swing.JFrame {
     
     // ========== ISSUE BOOK METHOD ==========
     private void issueBook() {
-        // Create combo boxes for book and member selection
         List<Book> books = BookDataManager.loadBooks();
         List<Member> members = MemberDataManager.loadMembers();
 
-        // Filter available books
-        JComboBox<String> bookCombo = new JComboBox<>();
+        // Create arrays for combo boxes
+        java.util.List<String> bookOptions = new java.util.ArrayList<>();
         for (Book book : books) {
             if (book.getAvailableCopies() > 0) {
-                bookCombo.addItem(book.getTitle() + " (" + book.getIsbn() + ")");
+                bookOptions.add(book.getTitle() + " (" + book.getIsbn() + ")");
             }
         }
 
-        JComboBox<String> memberCombo = new JComboBox<>();
+        if (bookOptions.isEmpty()) {
+            ModernNotification.warning(this, "No books available for borrowing!");
+            return;
+        }
+
+        java.util.List<String> memberOptions = new java.util.ArrayList<>();
         for (Member member : members) {
-            memberCombo.addItem(member.getName() + " (" + member.getId() + ")");
+            memberOptions.add(member.getName() + " (" + member.getId() + ")");
         }
 
-        JSpinner daysSpinner = new JSpinner(new SpinnerNumberModel(14, 1, 90, 1));
+        if (memberOptions.isEmpty()) {
+            ModernNotification.warning(this, "No members registered!");
+            return;
+        }
 
-        JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5));
-        panel.add(new JLabel("Select Book:"));
-        panel.add(bookCombo);
-        panel.add(new JLabel("Select Member:"));
-        panel.add(memberCombo);
-        panel.add(new JLabel("Loan Period (days):"));
-        panel.add(daysSpinner);
+        ModernDialog dialog = new ModernDialog.Builder(this, "Issue Book", "Select book and member")
+            .addComboBox("book", "Select Book", bookOptions.toArray(new String[0]), null)
+            .addComboBox("member", "Select Member", memberOptions.toArray(new String[0]), null)
+            .addSpinner("days", "Loan Period (days)", 14, 1, 90, 1)
+            .build();
 
-        int result = JOptionPane.showConfirmDialog(this, panel, "Issue Book", 
-                                                   JOptionPane.OK_CANCEL_OPTION);
-
-        if (result == JOptionPane.OK_OPTION) {
-            if (bookCombo.getSelectedItem() == null || memberCombo.getSelectedItem() == null) {
-                JOptionPane.showMessageDialog(this, "Please select both book and member.");
-                return;
-            }
+        if (dialog.showDialog()) {
+            String bookSelection = dialog.getComboBoxValue("book");
+            String memberSelection = dialog.getComboBoxValue("member");
+            int loanDays = dialog.getSpinnerValue("days");
 
             // Extract ISBN and Member ID
-            String bookSelection = bookCombo.getSelectedItem().toString();
             String isbn = bookSelection.substring(bookSelection.lastIndexOf("(") + 1, 
                                                  bookSelection.lastIndexOf(")"));
-
-            String memberSelection = memberCombo.getSelectedItem().toString();
             String memberId = memberSelection.substring(memberSelection.lastIndexOf("(") + 1, 
                                                        memberSelection.lastIndexOf(")"));
 
@@ -620,16 +526,11 @@ public class Dashboard extends javax.swing.JFrame {
             }
 
             if (selectedBook != null && selectedMember != null) {
-                // Calculate dates
                 LocalDate today = LocalDate.now();
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
                 String issueDate = today.format(formatter);
+                String dueDate = today.plusDays(loanDays).format(formatter);
 
-                int loanDays = (Integer) daysSpinner.getValue();
-                LocalDate dueLocalDate = today.plusDays(loanDays);
-                String dueDate = dueLocalDate.format(formatter);
-
-                // Create transaction
                 Transaction transaction = new Transaction(
                     selectedBook.getTitle(),
                     selectedBook.getIsbn(),
@@ -640,19 +541,16 @@ public class Dashboard extends javax.swing.JFrame {
                     "Active"
                 );
 
-                // Update book availability
                 selectedBook.setAvailableCopies(selectedBook.getAvailableCopies() - 1);
                 if (selectedBook.getAvailableCopies() == 0) {
                     selectedBook.setStatus("Unavailable");
                 }
                 BookDataManager.updateBook(selectedBook);
-
-                // Save transaction
                 TransactionDataManager.addTransaction(transaction);
 
-                JOptionPane.showMessageDialog(this, "✅ Book issued successfully!");
+                ModernNotification.success(this, "Book issued successfully!");
                 loadTransactionsToTable();
-                loadBooksToTable(); // Refresh books table
+                loadBooksToTable();
             }
         }
     }
@@ -687,19 +585,20 @@ public class Dashboard extends javax.swing.JFrame {
 
         DefaultTableModel model = (DefaultTableModel) TransactionTable1.getModel();
 
-        // Get ISBN and Member ID directly from their columns
-        String isbn = model.getValueAt(row, 1).toString();      // Column 1 = ISBN
-        String memberId = model.getValueAt(row, 3).toString();  // Column 3 = Member ID
-        String bookTitle = model.getValueAt(row, 0).toString(); // Column 0 = Book Title
+        String isbn = model.getValueAt(row, 1).toString();
+        String memberId = model.getValueAt(row, 3).toString();
+        String bookTitle = model.getValueAt(row, 0).toString();
+        String memberName = model.getValueAt(row, 2).toString();
 
-        int confirm = JOptionPane.showConfirmDialog(
+        boolean confirmed = ModernConfirm.show(
             this,
-            "Confirm book return?",
             "Return Book",
-            JOptionPane.YES_NO_OPTION
+            "Confirm return of '" + bookTitle + "' by " + memberName + "?",
+            "Return",
+            "Cancel"
         );
 
-        if (confirm == JOptionPane.YES_OPTION) {
+        if (confirmed) {
             LocalDate today = LocalDate.now();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
             String returnDate = today.format(formatter);
@@ -712,14 +611,11 @@ public class Dashboard extends javax.swing.JFrame {
                     BookDataManager.updateBook(book);
                 }
 
-                JOptionPane.showMessageDialog(this, "✅ Book returned successfully!");
-
+                ModernNotification.success(this, "Book returned successfully!");
                 loadTransactionsToTable();
                 loadBooksToTable();
-
             } else {
-                JOptionPane.showMessageDialog(this, "Failed to return book.", 
-                                            "Error", JOptionPane.ERROR_MESSAGE);
+                ModernNotification.error(this, "Failed to return book.");
             }
         }
     }

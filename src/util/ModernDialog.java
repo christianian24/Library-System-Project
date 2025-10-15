@@ -2,194 +2,288 @@ package util;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ModernDialog {
+/**
+ * Modern, reusable dialog component for forms
+ * Replaces JOptionPane with a custom-styled dialog
+ */
+public class ModernDialog extends JDialog {
+    private final Map<String, JComponent> fields = new HashMap<>();
+    private boolean confirmed = false;
+    private final Color bgColor = new Color(245, 239, 231);
+    private final Color panelColor = new Color(230, 216, 195);
+    private final Color buttonColor = new Color(222, 207, 187);
+    private final Color buttonHoverColor = new Color(211, 196, 174);
     
-    private static final Color BACKGROUND_COLOR = new Color(230, 216, 195);
-    private static final Color INPUT_BACKGROUND = new Color(245, 239, 231);
-    private static final Color LABEL_COLOR = new Color(50, 50, 50);
-    private static final Font LABEL_FONT = new Font("Segoe UI", Font.PLAIN, 14);
-    private static final Font INPUT_FONT = new Font("Segoe UI", Font.PLAIN, 14);
+    private ModernDialog(Frame parent, String title) {
+        super(parent, title, true);
+        setUndecorated(true);
+        setBackground(new Color(0, 0, 0, 0));
+        
+        JPanel mainPanel = new RoundedPanel(20);
+        mainPanel.setLayout(new BorderLayout(0, 0));
+        mainPanel.setBackground(bgColor);
+        mainPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
+            BorderFactory.createEmptyBorder(0, 0, 0, 0)
+        ));
+        
+        setContentPane(mainPanel);
+    }
     
-    /**
-     * Shows a modern input dialog with multiple fields
-     * @param parent The parent frame
-     * @param title Dialog title
-     * @param fields Map of field labels and their types ("text", "combo", "number")
-     * @param comboOptions Map of combo box options (only for combo fields)
-     * @return Map of field labels and their values, or null if cancelled
-     */
-    public static Map<String, Object> showInputDialog(
-            JFrame parent, 
-            String title, 
-            Map<String, String> fields,
-            Map<String, String[]> comboOptions) {
+    public static class Builder {
+        private final ModernDialog dialog;
+        private final JPanel fieldsPanel;
+        private int fieldCount = 0;
         
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBackground(BACKGROUND_COLOR);
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridwidth = GridBagConstraints.REMAINDER;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(5, 5, 5, 5);
-        
-        Map<String, JComponent> components = new HashMap<>();
-        
-        for (Map.Entry<String, String> entry : fields.entrySet()) {
-            String fieldName = entry.getKey();
-            String fieldType = entry.getValue();
+        public Builder(Frame parent, String title, String subtitle) {
+            dialog = new ModernDialog(parent, title);
             
-            JLabel label = new JLabel(fieldName + ":");
-            label.setFont(LABEL_FONT);
-            label.setForeground(LABEL_COLOR);
-            panel.add(label, gbc);
+            // Header Panel
+            JPanel headerPanel = new JPanel();
+            headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
+            headerPanel.setBackground(dialog.panelColor);
+            headerPanel.setBorder(BorderFactory.createEmptyBorder(20, 25, 15, 25));
             
-            JComponent component;
+            JLabel titleLabel = new JLabel(title);
+            titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+            titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
             
-            switch (fieldType.toLowerCase()) {
-                case "combo":
-                    JComboBox<String> comboBox = new JComboBox<>(comboOptions.get(fieldName));
-                    comboBox.setBackground(INPUT_BACKGROUND);
-                    comboBox.setFont(INPUT_FONT);
-                    comboBox.setPreferredSize(new Dimension(300, 35));
-                    component = comboBox;
-                    break;
-                    
-                case "number":
-                    JSpinner spinner = new JSpinner(new SpinnerNumberModel(1, 1, 999, 1));
-                    spinner.setFont(INPUT_FONT);
-                    spinner.setPreferredSize(new Dimension(300, 35));
-                    ((JSpinner.DefaultEditor) spinner.getEditor()).getTextField().setBackground(INPUT_BACKGROUND);
-                    component = spinner;
-                    break;
-                    
-                case "text":
-                default:
-                    JTextField textField = new JTextField();
-                    textField.setFont(INPUT_FONT);
-                    textField.setBackground(INPUT_BACKGROUND);
-                    textField.setPreferredSize(new Dimension(300, 35));
-                    textField.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
-                        BorderFactory.createEmptyBorder(5, 10, 5, 10)
-                    ));
-                    component = textField;
-                    break;
-            }
+            JLabel subtitleLabel = new JLabel(subtitle);
+            subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            subtitleLabel.setForeground(new Color(100, 100, 100));
+            subtitleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
             
-            components.put(fieldName, component);
-            panel.add(component, gbc);
+            headerPanel.add(titleLabel);
+            headerPanel.add(Box.createVerticalStrut(5));
+            headerPanel.add(subtitleLabel);
+            
+            dialog.add(headerPanel, BorderLayout.NORTH);
+            
+            // Fields Panel
+            fieldsPanel = new JPanel();
+            fieldsPanel.setLayout(new BoxLayout(fieldsPanel, BoxLayout.Y_AXIS));
+            fieldsPanel.setBackground(dialog.bgColor);
+            fieldsPanel.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
+            
+            JScrollPane scrollPane = new JScrollPane(fieldsPanel);
+            scrollPane.setBorder(null);
+            scrollPane.setBackground(dialog.bgColor);
+            scrollPane.getViewport().setBackground(dialog.bgColor);
+            dialog.add(scrollPane, BorderLayout.CENTER);
         }
         
-        // Custom buttons
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
-        buttonPanel.setBackground(BACKGROUND_COLOR);
-        
-        int result = JOptionPane.showConfirmDialog(
-            parent,
-            panel,
-            title,
-            JOptionPane.OK_CANCEL_OPTION,
-            JOptionPane.PLAIN_MESSAGE
-        );
-        
-        if (result == JOptionPane.OK_OPTION) {
-            Map<String, Object> values = new HashMap<>();
+        public Builder addTextField(String key, String label, String defaultValue, boolean editable) {
+            JLabel labelComp = new JLabel(label);
+            labelComp.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            labelComp.setAlignmentX(Component.LEFT_ALIGNMENT);
             
-            for (Map.Entry<String, JComponent> entry : components.entrySet()) {
-                String fieldName = entry.getKey();
-                JComponent component = entry.getValue();
-                
-                if (component instanceof JTextField) {
-                    values.put(fieldName, ((JTextField) component).getText().trim());
-                } else if (component instanceof JComboBox) {
-                    values.put(fieldName, ((JComboBox<?>) component).getSelectedItem());
-                } else if (component instanceof JSpinner) {
-                    values.put(fieldName, ((JSpinner) component).getValue());
+            JTextField textField = new JTextField(defaultValue);
+            textField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            textField.setPreferredSize(new Dimension(400, 35));
+            textField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
+            textField.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
+                BorderFactory.createEmptyBorder(5, 10, 5, 10)
+            ));
+            textField.setEditable(editable);
+            if (!editable) {
+                textField.setBackground(new Color(220, 220, 220));
+            }
+            textField.setAlignmentX(Component.LEFT_ALIGNMENT);
+            
+            if (fieldCount > 0) {
+                fieldsPanel.add(Box.createVerticalStrut(15));
+            }
+            fieldsPanel.add(labelComp);
+            fieldsPanel.add(Box.createVerticalStrut(5));
+            fieldsPanel.add(textField);
+            
+            dialog.fields.put(key, textField);
+            fieldCount++;
+            
+            return this;
+        }
+        
+        public Builder addComboBox(String key, String label, String[] options, String selectedValue) {
+            JLabel labelComp = new JLabel(label);
+            labelComp.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            labelComp.setAlignmentX(Component.LEFT_ALIGNMENT);
+            
+            JComboBox<String> comboBox = new JComboBox<>(options);
+            comboBox.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            comboBox.setPreferredSize(new Dimension(400, 35));
+            comboBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
+            comboBox.setBackground(dialog.bgColor);
+            if (selectedValue != null) {
+                comboBox.setSelectedItem(selectedValue);
+            }
+            comboBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+            
+            if (fieldCount > 0) {
+                fieldsPanel.add(Box.createVerticalStrut(15));
+            }
+            fieldsPanel.add(labelComp);
+            fieldsPanel.add(Box.createVerticalStrut(5));
+            fieldsPanel.add(comboBox);
+            
+            dialog.fields.put(key, comboBox);
+            fieldCount++;
+            
+            return this;
+        }
+        
+        public Builder addSpinner(String key, String label, int defaultValue, int min, int max, int step) {
+            JLabel labelComp = new JLabel(label);
+            labelComp.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            labelComp.setAlignmentX(Component.LEFT_ALIGNMENT);
+            
+            JSpinner spinner = new JSpinner(new SpinnerNumberModel(defaultValue, min, max, step));
+            spinner.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            spinner.setPreferredSize(new Dimension(400, 35));
+            spinner.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
+            spinner.setAlignmentX(Component.LEFT_ALIGNMENT);
+            
+            if (fieldCount > 0) {
+                fieldsPanel.add(Box.createVerticalStrut(15));
+            }
+            fieldsPanel.add(labelComp);
+            fieldsPanel.add(Box.createVerticalStrut(5));
+            fieldsPanel.add(spinner);
+            
+            dialog.fields.put(key, spinner);
+            fieldCount++;
+            
+            return this;
+        }
+        
+        public ModernDialog build() {
+            // Button Panel
+            JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 15));
+            buttonPanel.setBackground(dialog.bgColor);
+            buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 25, 15, 25));
+            
+            JButton cancelButton = createStyledButton("Cancel", dialog.buttonColor);
+            cancelButton.addActionListener(e -> {
+                dialog.confirmed = false;
+                dialog.dispose();
+            });
+            
+            JButton confirmButton = createStyledButton("Confirm", new Color(67, 165, 103));
+            confirmButton.setForeground(Color.WHITE);
+            confirmButton.addActionListener(e -> {
+                dialog.confirmed = true;
+                dialog.dispose();
+            });
+            
+            buttonPanel.add(cancelButton);
+            buttonPanel.add(confirmButton);
+            
+            dialog.add(buttonPanel, BorderLayout.SOUTH);
+            
+            dialog.pack();
+            dialog.setSize(Math.max(500, dialog.getWidth()), Math.min(600, dialog.getHeight()));
+            dialog.setLocationRelativeTo(dialog.getParent());
+            
+            // ESC to close
+            dialog.getRootPane().registerKeyboardAction(
+                e -> {
+                    dialog.confirmed = false;
+                    dialog.dispose();
+                },
+                KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+                JComponent.WHEN_IN_FOCUSED_WINDOW
+            );
+            
+            // Enter to confirm
+            dialog.getRootPane().registerKeyboardAction(
+                e -> {
+                    dialog.confirmed = true;
+                    dialog.dispose();
+                },
+                KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0),
+                JComponent.WHEN_IN_FOCUSED_WINDOW
+            );
+            
+            return dialog;
+        }
+        
+        private JButton createStyledButton(String text, Color bgColor) {
+            JButton button = new JButton(text);
+            button.setFont(new Font("Segoe UI", Font.BOLD, 13));
+            button.setPreferredSize(new Dimension(100, 35));
+            button.setBackground(bgColor);
+            button.setForeground(text.equals("Confirm") ? Color.WHITE : Color.BLACK);
+            button.setFocusPainted(false);
+            button.setBorderPainted(false);
+            button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            
+            button.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    button.setBackground(bgColor.darker());
                 }
-            }
+                
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    button.setBackground(bgColor);
+                }
+            });
             
-            return values;
+            return button;
+        }
+    }
+    
+    public boolean showDialog() {
+        setVisible(true);
+        return confirmed;
+    }
+    
+    public String getTextFieldValue(String key) {
+        JComponent component = fields.get(key);
+        if (component instanceof JTextField) {
+            return ((JTextField) component).getText().trim();
+        }
+        return "";
+    }
+    
+    public String getComboBoxValue(String key) {
+        JComponent component = fields.get(key);
+        if (component instanceof JComboBox) {
+            return ((JComboBox<?>) component).getSelectedItem().toString();
+        }
+        return "";
+    }
+    
+    public int getSpinnerValue(String key) {
+        JComponent component = fields.get(key);
+        if (component instanceof JSpinner) {
+            return (Integer) ((JSpinner) component).getValue();
+        }
+        return 0;
+    }
+    
+    // Rounded Panel class
+    static class RoundedPanel extends JPanel {
+        private final int radius;
+        
+        public RoundedPanel(int radius) {
+            super();
+            this.radius = radius;
+            setOpaque(false);
         }
         
-        return null;
-    }
-    
-    /**
-     * Shows a simple text input dialog
-     */
-    public static Map<String, Object> showTextInputDialog(JFrame parent, String title, String... fieldNames) {
-        Map<String, String> fields = new HashMap<>();
-        for (String fieldName : fieldNames) {
-            fields.put(fieldName, "text");
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(getBackground());
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), radius, radius);
+            g2.dispose();
+            super.paintComponent(g);
         }
-        return showInputDialog(parent, title, fields, null);
-    }
-    
-    /**
-     * Shows a confirmation dialog with custom styling
-     */
-    public static boolean showConfirmDialog(JFrame parent, String message, String title) {
-        UIManager.put("OptionPane.background", BACKGROUND_COLOR);
-        UIManager.put("Panel.background", BACKGROUND_COLOR);
-        UIManager.put("OptionPane.messageFont", new Font("Segoe UI", Font.PLAIN, 14));
-        
-        int result = JOptionPane.showConfirmDialog(
-            parent,
-            message,
-            title,
-            JOptionPane.YES_NO_OPTION,
-            JOptionPane.QUESTION_MESSAGE
-        );
-        
-        return result == JOptionPane.YES_OPTION;
-    }
-    
-    /**
-     * Shows a success message dialog
-     */
-    public static void showSuccessDialog(JFrame parent, String message) {
-        UIManager.put("OptionPane.background", BACKGROUND_COLOR);
-        UIManager.put("Panel.background", BACKGROUND_COLOR);
-        
-        JOptionPane.showMessageDialog(
-            parent,
-            message,
-            "Success",
-            JOptionPane.INFORMATION_MESSAGE
-        );
-    }
-    
-    /**
-     * Shows an error message dialog
-     */
-    public static void showErrorDialog(JFrame parent, String message) {
-        UIManager.put("OptionPane.background", BACKGROUND_COLOR);
-        UIManager.put("Panel.background", BACKGROUND_COLOR);
-        
-        JOptionPane.showMessageDialog(
-            parent,
-            message,
-            "Error",
-            JOptionPane.ERROR_MESSAGE
-        );
-    }
-    
-    /**
-     * Shows a warning message dialog
-     */
-    public static void showWarningDialog(JFrame parent, String message) {
-        UIManager.put("OptionPane.background", BACKGROUND_COLOR);
-        UIManager.put("Panel.background", BACKGROUND_COLOR);
-        
-        JOptionPane.showMessageDialog(
-            parent,
-            message,
-            "Warning",
-            JOptionPane.WARNING_MESSAGE
-        );
     }
 }
