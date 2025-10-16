@@ -137,22 +137,42 @@ public class Dashboard extends javax.swing.JFrame {
 
     //========== Add New Member ==========
     private void addMember() {
-        ModernDialog dialog = new ModernDialog.Builder(this, "Add New Member", "Fill in the member information")
-            .addTextField("id", "Member ID", "", true)
-            .addTextField("name", "Full Name", "", true)
-            .addTextField("email", "Email Address", "", true)
-            .addTextField("phone", "Phone Number", "", true)
-            .build();
+        boolean validInput = false;
 
-        if (dialog.showDialog()) {
+        while (!validInput) {
+            ModernDialog dialog = new ModernDialog.Builder(this, "Add New Member", "Fill in the member information")
+                .addTextField("id", "Member ID", "", true)
+                .addTextField("name", "Full Name", "", true)
+                .addTextField("email", "Email Address", "", true)
+                .addTextField("phone", "Phone Number", "", true)
+                .build();
+
+            if (!dialog.showDialog()) {
+                // User clicked Cancel
+                return;
+            }
+
             String id = dialog.getTextFieldValue("id");
             String name = dialog.getTextFieldValue("name");
             String email = dialog.getTextFieldValue("email");
             String phone = dialog.getTextFieldValue("phone");
 
+            // Validation checks
             if (id.isEmpty() || name.isEmpty() || email.isEmpty() || phone.isEmpty()) {
                 ModernNotification.warning(this, "All fields are required!");
-                return;
+                continue; // Show dialog again
+            }
+
+            // Validate email format
+            if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+                ModernNotification.error(this, "Please enter a valid email address!");
+                continue; // Show dialog again
+            }
+
+            // Validate phone number (10-11 digits)
+            if (!phone.matches("\\d{10,11}")) {
+                ModernNotification.error(this, "Phone number must be 10-11 digits!");
+                continue; // Show dialog again
             }
 
             String date = new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date());
@@ -162,8 +182,10 @@ public class Dashboard extends javax.swing.JFrame {
             if (success) {
                 ModernNotification.success(this, "Member added successfully!");
                 loadMembersToTable();
+                validInput = true; // Exit loop
             } else {
                 ModernNotification.error(this, "Duplicate email or phone number found.");
+                continue; // Show dialog again
             }
         }
     }
@@ -281,6 +303,7 @@ public class Dashboard extends javax.swing.JFrame {
     }
 
     // ========== ADD NEW BOOK METHOD ==========
+    // ========== ADD NEW BOOK METHOD ==========
     private void addBook() {
         String[] genres = {
             "Fiction", "Non-Fiction", "Science", "History", "Biography",
@@ -288,31 +311,45 @@ public class Dashboard extends javax.swing.JFrame {
             "Technology", "Business", "Philosophy", "Poetry", "Other"
         };
 
-        ModernDialog dialog = new ModernDialog.Builder(this, "Add New Book", "Enter book details")
-            .addTextField("title", "Book Title", "", true)
-            .addTextField("author", "Author Name", "", true)
-            .addTextField("isbn", "ISBN Number", "", true)
-            .addComboBox("category", "Category/Genre", genres, null)
-            .addTextField("copies", "Total Copies", "1", true)
-            .build();
+        boolean validInput = false;
 
-        if (dialog.showDialog()) {
+        while (!validInput) {
+            ModernDialog dialog = new ModernDialog.Builder(this, "Add New Book", "Enter book details")
+                .addTextField("title", "Book Title", "", true)
+                .addTextField("author", "Author Name", "", true)
+                .addTextField("isbn", "ISBN Number (10 digits)", "", true)
+                .addComboBox("category", "Category/Genre", genres, null)
+                .addTextField("copies", "Total Copies", "1", true)
+                .build();
+
+            if (!dialog.showDialog()) {
+                // User clicked Cancel
+                return;
+            }
+
             String title = dialog.getTextFieldValue("title");
             String author = dialog.getTextFieldValue("author");
             String isbn = dialog.getTextFieldValue("isbn");
             String category = dialog.getComboBoxValue("category");
             String copiesStr = dialog.getTextFieldValue("copies");
 
+            // Validation checks
             if (title.isEmpty() || author.isEmpty() || isbn.isEmpty() || copiesStr.isEmpty()) {
                 ModernNotification.warning(this, "All fields are required!");
-                return;
+                continue; // Show dialog again
+            }
+
+            //  Validate ISBN - must be exactly 10 digits
+            if (!isbn.matches("\\d{10}")) {
+                ModernNotification.error(this, "ISBN must be exactly 10 digits!");
+                continue; // Show dialog again
             }
 
             try {
                 int copies = Integer.parseInt(copiesStr);
                 if (copies <= 0) {
                     ModernNotification.warning(this, "Total copies must be greater than 0!");
-                    return;
+                    continue; // Show dialog again
                 }
 
                 Book newBook = new Book(title, author, isbn, category, copies);
@@ -320,11 +357,14 @@ public class Dashboard extends javax.swing.JFrame {
                 if (BookDataManager.addBook(newBook)) {
                     ModernNotification.success(this, "Book added successfully!");
                     loadBooksToTable();
+                    validInput = true; // Exit loop
                 } else {
                     ModernNotification.error(this, "Failed to add book. ISBN may already exist.");
+                    continue; // Show dialog again
                 }
             } catch (NumberFormatException e) {
                 ModernNotification.warning(this, "Please enter a valid number for Total Copies!");
+                continue; // Show dialog again
             }
         }
     }

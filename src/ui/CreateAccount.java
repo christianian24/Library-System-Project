@@ -3,7 +3,6 @@
 package ui;
 import util.FrameUtil;
 import java.awt.Color;
-import util.AlertUtil;
 import data.UserDataManager;
 
 public class CreateAccount extends javax.swing.JFrame {
@@ -38,10 +37,9 @@ public class CreateAccount extends javax.swing.JFrame {
                 // Block non-digit characters
                 if (!Character.isDigit(c) && c != '\b' && c != '\u007F') {
                     e.consume();
-                    util.AlertUtil.showRoundedToastTopRight(
+                    util.ModernNotification.warning(
                         CreateAccount.this,
-                        "Please enter numbers only.",
-                        new Color(196, 160, 77)
+                        "Please enter numbers only."
                     );
                     return;
                 }
@@ -49,10 +47,9 @@ public class CreateAccount extends javax.swing.JFrame {
                 // Limit to 11 digits
                 if (text.length() >= 11 && c != '\b' && c != '\u007F') {
                     e.consume();
-                    util.AlertUtil.showRoundedToastTopRight(
+                    util.ModernNotification.warning(
                         CreateAccount.this,
-                        "Mobile number must be 11 digits only.",
-                        new Color(196, 160, 77) 
+                        "Mobile number must be 11 digits only."
                     );
                 }
             }
@@ -457,6 +454,7 @@ public class CreateAccount extends javax.swing.JFrame {
     }//GEN-LAST:event_EmailActionPerformed
 
     private void CreateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CreateButtonActionPerformed
+                                          
     String first = txtFirstname.getText().trim();
     String last = Lastname.getText().trim();
     String email = Email.getText().trim();
@@ -466,22 +464,22 @@ public class CreateAccount extends javax.swing.JFrame {
 
     // 🔸 Validation checks
     if (first.isEmpty() || last.isEmpty() || email.isEmpty() || mobile.isEmpty() || pass.isEmpty() || repass.isEmpty()) {
-        util.AlertUtil.showRoundedToastTopRight(this, "All fields are required!", new java.awt.Color(196, 160, 77));
+        util.ModernNotification.warning(this, "All fields are required!");
         return;
     }
 
     if (!pass.equals(repass)) {
-        util.AlertUtil.showRoundedToastTopRight(this, "Passwords do not match!", new java.awt.Color(196, 160, 77));
+        util.ModernNotification.warning(this, "Passwords do not match!");
         return;
     }
 
     if (!email.contains("@") || !email.contains(".")) {
-        util.AlertUtil.showRoundedToastTopRight(this, "Invalid email format!", new java.awt.Color(174, 68, 68));
+        util.ModernNotification.error(this, "Invalid email format!");
         return;
     }
 
     if (mobile.length() != 11 || !mobile.matches("\\d+")) {
-        util.AlertUtil.showRoundedToastTopRight(this, "Mobile number must be 11 digits.", new java.awt.Color(196, 160, 77));
+        util.ModernNotification.warning(this, "Mobile number must be 11 digits.");
         return;
     }
 
@@ -492,18 +490,26 @@ public class CreateAccount extends javax.swing.JFrame {
     boolean success = data.UserDataManager.addUser(user);
 
     if (success) {
-        util.AlertUtil.showRoundedToastTopRight(this, "Account created successfully!", new java.awt.Color(132, 153, 122));
+        util.ModernNotification.success(this, "Account created successfully!");
 
         // Reset fields
         txtFirstname.setText("First name");
+        txtFirstname.setForeground(Color.GRAY);
         Lastname.setText("Last name");
+        Lastname.setForeground(Color.GRAY);
         Email.setText("Email");
+        Email.setForeground(Color.GRAY);
         Number.setText("Mobile number");
-        Password.setText("");
-        Repassword.setText("");
+        Number.setForeground(Color.GRAY);
+        Password.setText("Enter Password");
+        Password.setForeground(Color.GRAY);
+        Password.setEchoChar((char) 0);
+        Repassword.setText("Confirm Password");
+        Repassword.setForeground(Color.GRAY);
+        Repassword.setEchoChar((char) 0);
 
     } else {
-        util.AlertUtil.showRoundedToastTopRight(this, "Account already exists!", new java.awt.Color(132, 153, 122));
+        util.ModernNotification.error(this, "Account already exists!");
     }
 
     }//GEN-LAST:event_CreateButtonActionPerformed

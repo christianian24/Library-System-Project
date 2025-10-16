@@ -7,6 +7,8 @@ import java.awt.Color;
 import javax.swing.JOptionPane;
 import data.UserDataManager;
 import model.User;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 /**
  *
  * @ian
@@ -304,7 +306,7 @@ public class Main extends javax.swing.JFrame {
 
     // ✅ Check if a role is selected
     if (selectedRole.isEmpty()) {
-        util.AlertUtil.showRoundedToastTopRight(this, "Please select a role first!", new java.awt.Color(196, 160, 77));
+        util.ModernNotification.warning(this, "Please select a role first!");
         return;
     }
 
@@ -312,24 +314,24 @@ public class Main extends javax.swing.JFrame {
     User user = UserDataManager.authenticate(email, password);
 
     if (user == null) {
-        util.AlertUtil.showRoundedToastTopRight(this, "Invalid credentials!", new java.awt.Color(174, 68, 68));
+        util.ModernNotification.error(this, "Invalid credentials!");
         return;
     }
 
     // 🔸 Check if role matches what was selected
     if (!user.getRole().equalsIgnoreCase(selectedRole)) {
-        util.AlertUtil.showRoundedToastTopRight(this, "Role mismatch! Try selecting the correct role.", new java.awt.Color(174, 68, 68));
+        util.ModernNotification.error(this, "Role mismatch! Try selecting the correct role.");
         return;
     }
 
     if (user.getRole().equalsIgnoreCase("admin")) {
-        util.AlertUtil.showRoundedToastTopRight(this, "Welcome Admin!", new java.awt.Color(132, 153, 122));
+        util.ModernNotification.success(this, "Welcome Admin!");
         Dashboard dashboard = new Dashboard();
         dashboard.setLocationRelativeTo(null);
         dashboard.setVisible(true);
         this.dispose();
     } else {
-        util.AlertUtil.showRoundedToastTopRight(this, "Login successful!", new java.awt.Color(132, 153, 122));
+        util.ModernNotification.success(this, "Login successful!");
         StudentFrame studentFrame = new StudentFrame();
         studentFrame.setLocationRelativeTo(null);
         studentFrame.setVisible(true);
@@ -337,19 +339,20 @@ public class Main extends javax.swing.JFrame {
     }
 
 
+    
 
 
     }//GEN-LAST:event_LoginActionPerformed
 
     private void AdminActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AdminActionPerformed
     selectedRole = "admin";
-    util.AlertUtil.showRoundedToastTopRight(this, "Admin mode selected", new java.awt.Color(182,176,159));
+    util.ModernNotification.info(this, "Admin mode selected");
                            
     }//GEN-LAST:event_AdminActionPerformed
 
     private void StudentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_StudentActionPerformed
     selectedRole = "student";
-    util.AlertUtil.showRoundedToastTopRight(this, "Student mode selected", new java.awt.Color(182,176,159));
+    util.ModernNotification.info(this, "Student mode selected");
     }//GEN-LAST:event_StudentActionPerformed
 
     private void CreateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CreateButtonActionPerformed

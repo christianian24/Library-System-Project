@@ -23,6 +23,16 @@ public class ModernNotification extends JDialog {
         }
     }
     
+    private int targetX;
+    private int startX;
+    private static final int ANIMATION_DURATION = 250; // Faster animation (matching AlertUtil's 25ms x 10 steps)
+    private static final int SLIDE_DISTANCE = 15; // Subtle slide (matching AlertUtil)
+    
+    // Track current notification to prevent overlapping
+    private static ModernNotification currentNotification = null;
+    private Timer autoCloseTimer; // Track auto-close timer
+    private Timer animationTimer; // Track animation timer
+    
     private ModernNotification(Frame parent, String message, Type type) {
         super(parent, false);
         setUndecorated(true);
@@ -42,8 +52,8 @@ public class ModernNotification extends JDialog {
         iconLabel.setForeground(type.color);
         mainPanel.add(iconLabel, BorderLayout.WEST);
         
-        // Message
-        JLabel messageLabel = new JLabel("<html><body style='width: 300px'>" + message + "</body></html>");
+        // Message - dynamic width based on content
+        JLabel messageLabel = new JLabel("<html><body style='width: auto; max-width: 400px'>" + message + "</body></html>");
         messageLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         mainPanel.add(messageLabel, BorderLayout.CENTER);
         
@@ -55,7 +65,7 @@ public class ModernNotification extends JDialog {
         closeLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                fadeOut();
+                slideOut();
             }
             
             @Override
@@ -71,44 +81,138 @@ public class ModernNotification extends JDialog {
         mainPanel.add(closeLabel, BorderLayout.EAST);
         
         setContentPane(mainPanel);
-        pack();
+        pack(); // Size based on content
         
-        // Position at top-right of parent
-        if (parent != null) {
+        // Set initial opacity to 0 for fade-in effect (like AlertUtil)
+        setOpacity(0f);
+        
+        // Position at top-right of parent (start slightly to the right, like AlertUtil)
+        if (parent != null && parent.isShowing()) {
+            Point parentLocation = parent.getLocationOnScreen();
+            Dimension parentSize = parent.getSize();
+            
+            // Target position (final resting position)
+            targetX = parentLocation.x + parentSize.width - getWidth() - 20;
+            int targetY = parentLocation.y + 45; // Same as AlertUtil
+            
+            // Start position (slightly to the right, 15px like AlertUtil)
+            startX = targetX + 15;
+            
+            setLocation(startX, targetY);
+        } else if (parent != null) {
+            // Fallback if parent is not showing yet
             Point parentLocation = parent.getLocation();
             Dimension parentSize = parent.getSize();
-            setLocation(
-                parentLocation.x + parentSize.width - getWidth() - 30,
-                parentLocation.y + 80
-            );
+            
+            // Target position (final resting position)
+            targetX = parentLocation.x + parentSize.width - getWidth() - 20;
+            int targetY = parentLocation.y + 45;
+            
+            // Start position (slightly to the right, 15px like AlertUtil)
+            startX = targetX + 15;
+            
+            setLocation(startX, targetY);
+        } else {
+            // Fallback to screen center if no parent
+            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            targetX = screenSize.width - getWidth() - 20;
+            int targetY = 45;
+            startX = targetX + 15;
+            setLocation(startX, targetY);
         }
         
-        // Auto-close after 4 seconds
-        Timer timer = new Timer(4000, e -> fadeOut());
-        timer.setRepeats(false);
-        timer.start();
+        // Start slide-in animation
+        slideIn();
+        
+        // Auto-close after 2.5 seconds (matching your AlertUtil timing)
+        autoCloseTimer = new Timer(2500, e -> slideOut());
+        autoCloseTimer.setRepeats(false);
+        autoCloseTimer.start();
     }
     
-    private void fadeOut() {
-        Timer timer = new Timer(10, null);
-        timer.addActionListener(e -> {
-            float opacity = ((Window) SwingUtilities.getWindowAncestor(getContentPane())).getOpacity();
-            opacity -= 0.05f;
-            if (opacity <= 0) {
-                timer.stop();
-                dispose();
-            } else {
-                ((Window) SwingUtilities.getWindowAncestor(getContentPane())).setOpacity(opacity);
+    private void slideIn() {
+        animationTimer = new Timer(10, null);
+        final long startTime = System.currentTimeMillis();
+        
+        animationTimer.addActionListener(e -> {
+            long elapsed = System.currentTimeMillis() - startTime;
+            float progress = Math.min(1.0f, (float) elapsed / ANIMATION_DURATION);
+            
+            // Ease-out cubic for smooth deceleration
+            float eased = 1 - (float) Math.pow(1 - progress, 3);
+            
+            int currentX = startX - (int)((startX - targetX) * eased);
+            setLocation(currentX, getY());
+            
+            // Fade in simultaneously (like AlertUtil)
+            setOpacity(progress);
+            
+            if (progress >= 1.0f) {
+                animationTimer.stop();
+                setLocation(targetX, getY());
+                setOpacity(1.0f);
             }
         });
-        timer.start();
+        animationTimer.start();
+    }
+    
+    private void slideOut() {
+        Timer slideTimer = new Timer(10, null);
+        final long startTime = System.currentTimeMillis();
+        final int currentX = getX();
+        final int endX = startX; // Return to starting position (15px to the right)
+        
+        slideTimer.addActionListener(e -> {
+            long elapsed = System.currentTimeMillis() - startTime;
+            float progress = Math.min(1.0f, (float) elapsed / ANIMATION_DURATION);
+            
+            // Ease-in cubic for smooth acceleration
+            float eased = (float) Math.pow(progress, 3);
+            
+            int newX = currentX + (int)((endX - currentX) * eased);
+            setLocation(newX, getY());
+            
+            // Fade out simultaneously
+            float opacity = 1.0f - progress;
+            setOpacity(Math.max(0, opacity));
+            
+            if (progress >= 1.0f) {
+                slideTimer.stop();
+                dispose();
+                currentNotification = null;
+            }
+        });
+        slideTimer.start();
     }
     
     public static void show(Frame parent, String message, Type type) {
         SwingUtilities.invokeLater(() -> {
-            ModernNotification notification = new ModernNotification(parent, message, type);
-            notification.setVisible(true);
+            // If there's already a notification showing, close it immediately
+            if (currentNotification != null) {
+                currentNotification.forceClose(); // Instant close, no animation
+            }
+            showNotification(parent, message, type);
         });
+    }
+    
+    private static void showNotification(Frame parent, String message, Type type) {
+        currentNotification = new ModernNotification(parent, message, type);
+        currentNotification.setVisible(true);
+    }
+    
+    // Force close without animation for instant replacement (like AlertUtil)
+    private void forceClose() {
+        // Stop all timers immediately
+        if (autoCloseTimer != null) {
+            autoCloseTimer.stop();
+        }
+        if (animationTimer != null) {
+            animationTimer.stop();
+        }
+        
+        // Dispose immediately without animation
+        dispose();
+        currentNotification = null;
     }
     
     public static void success(Frame parent, String message) {
