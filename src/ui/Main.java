@@ -1,3 +1,4 @@
+
 //author @ian
 
 package ui;
@@ -88,6 +89,78 @@ public class Main extends javax.swing.JFrame {
                 }
             }
         });
+        
+        // ========== ADD ENTER KEY LISTENERS ==========
+        // Add Enter key listener to username field
+        txtUsername.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    performLogin();
+                }
+            }
+        });
+        
+        // Add Enter key listener to password field
+        txtPassword.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    performLogin();
+                }
+            }
+        });
+    }
+    
+    // ========== EXTRACTED LOGIN METHOD ==========
+    private void performLogin() {
+        String email = txtUsername.getText().trim();
+        String password = new String(txtPassword.getPassword()).trim();
+
+        // Check if fields are placeholders
+        if (email.equals("Enter Username") || email.isEmpty()) {
+            util.ModernNotification.warning(this, "Please enter your username!");
+            return;
+        }
+        
+        if (password.equals("Enter Password") || password.isEmpty()) {
+            util.ModernNotification.warning(this, "Please enter your password!");
+            return;
+        }
+
+        // ✅ Check if a role is selected
+        if (selectedRole.isEmpty()) {
+            util.ModernNotification.warning(this, "Please select a role first!");
+            return;
+        }
+
+        // Authenticate user (both admin and student)
+        User user = UserDataManager.authenticate(email, password);
+
+        if (user == null) {
+            util.ModernNotification.error(this, "Invalid credentials!");
+            return;
+        }
+
+        // 🔸 Check if role matches what was selected
+        if (!user.getRole().equalsIgnoreCase(selectedRole)) {
+            util.ModernNotification.error(this, "Role mismatch! Try selecting the correct role.");
+            return;
+        }
+
+        if (user.getRole().equalsIgnoreCase("admin")) {
+            util.ModernNotification.success(this, "Welcome Admin!");
+            Dashboard dashboard = new Dashboard();
+            dashboard.setLocationRelativeTo(null);
+            dashboard.setVisible(true);
+            this.dispose();
+        } else {
+            util.ModernNotification.success(this, "Login successful!");
+            StudentFrame studentFrame = new StudentFrame();
+            studentFrame.setLocationRelativeTo(null);
+            studentFrame.setVisible(true);
+            this.dispose();
+        }
     }
 
     /**
@@ -300,48 +373,8 @@ public class Main extends javax.swing.JFrame {
     }//GEN-LAST:event_txtUsernameActionPerformed
 
     private void LoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_LoginActionPerformed
-                                         
-    String email = txtUsername.getText().trim();
-    String password = new String(txtPassword.getPassword()).trim();
-
-    // ✅ Check if a role is selected
-    if (selectedRole.isEmpty()) {
-        util.ModernNotification.warning(this, "Please select a role first!");
-        return;
-    }
-
-    // Authenticate user (both admin and student)
-    User user = UserDataManager.authenticate(email, password);
-
-    if (user == null) {
-        util.ModernNotification.error(this, "Invalid credentials!");
-        return;
-    }
-
-    // 🔸 Check if role matches what was selected
-    if (!user.getRole().equalsIgnoreCase(selectedRole)) {
-        util.ModernNotification.error(this, "Role mismatch! Try selecting the correct role.");
-        return;
-    }
-
-    if (user.getRole().equalsIgnoreCase("admin")) {
-        util.ModernNotification.success(this, "Welcome Admin!");
-        Dashboard dashboard = new Dashboard();
-        dashboard.setLocationRelativeTo(null);
-        dashboard.setVisible(true);
-        this.dispose();
-    } else {
-        util.ModernNotification.success(this, "Login successful!");
-        StudentFrame studentFrame = new StudentFrame();
-        studentFrame.setLocationRelativeTo(null);
-        studentFrame.setVisible(true);
-        this.dispose();
-    }
-
-
-    
-
-
+    // Call the extracted login method
+        performLogin();
     }//GEN-LAST:event_LoginActionPerformed
 
     private void AdminActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AdminActionPerformed
