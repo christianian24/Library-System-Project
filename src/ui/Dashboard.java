@@ -131,7 +131,14 @@ public class Dashboard extends javax.swing.JFrame {
 
         List<Member> members = MemberDataManager.loadMembers();
         for (Member m : members) {
-            model.addRow(new Object[]{m.getId(), m.getName(), m.getEmail(), m.getPhone(), m.getMemberSince(), ""});
+            model.addRow(new Object[]{
+                m.getId(), 
+                m.getFullName(),  // Display as "FirstName LastName"
+                m.getEmail(), 
+                m.getPhone(), 
+                m.getMemberSince(), 
+                ""
+            });
         }
     }
 
@@ -142,50 +149,51 @@ public class Dashboard extends javax.swing.JFrame {
         while (!validInput) {
             ModernDialog dialog = new ModernDialog.Builder(this, "Add New Member", "Fill in the member information")
                 .addTextField("id", "Member ID", "", true)
-                .addTextField("name", "Full Name", "", true)
+                .addTextField("firstName", "First Name", "", true)
+                .addTextField("lastName", "Last Name", "", true)
                 .addTextField("email", "Email Address", "", true)
                 .addTextField("phone", "Phone Number", "", true)
                 .build();
 
             if (!dialog.showDialog()) {
-                // User clicked Cancel
                 return;
             }
 
             String id = dialog.getTextFieldValue("id");
-            String name = dialog.getTextFieldValue("name");
+            String firstName = dialog.getTextFieldValue("firstName");
+            String lastName = dialog.getTextFieldValue("lastName");
             String email = dialog.getTextFieldValue("email");
             String phone = dialog.getTextFieldValue("phone");
 
             // Validation checks
-            if (id.isEmpty() || name.isEmpty() || email.isEmpty() || phone.isEmpty()) {
+            if (id.isEmpty() || firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || phone.isEmpty()) {
                 ModernNotification.warning(this, "All fields are required!");
-                continue; // Show dialog again
+                continue;
             }
 
             // Validate email format
             if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
                 ModernNotification.error(this, "Please enter a valid email address!");
-                continue; // Show dialog again
+                continue;
             }
 
             // Validate phone number (10-11 digits)
             if (!phone.matches("\\d{10,11}")) {
                 ModernNotification.error(this, "Phone number must be 10-11 digits!");
-                continue; // Show dialog again
+                continue;
             }
 
             String date = new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date());
-            Member newMember = new Member(id, name, email, phone, date);
+            Member newMember = new Member(id, firstName, lastName, email, phone, date);
 
             boolean success = MemberDataManager.addMember(newMember);
             if (success) {
                 ModernNotification.success(this, "Member added successfully!");
                 loadMembersToTable();
-                validInput = true; // Exit loop
+                validInput = true;
             } else {
                 ModernNotification.error(this, "Duplicate email or phone number found.");
-                continue; // Show dialog again
+                continue;
             }
         }
     }
@@ -224,14 +232,18 @@ public class Dashboard extends javax.swing.JFrame {
         DefaultTableModel model = (DefaultTableModel) MemberTable.getModel();
 
         String id = model.getValueAt(row, 0).toString();
-        String name = model.getValueAt(row, 1).toString();
+        String fullName = model.getValueAt(row, 1).toString();
+        String[] nameParts = fullName.split(" ", 2);
+        String firstName = nameParts[0];
+        String lastName = nameParts.length > 1 ? nameParts[1] : "";
         String email = model.getValueAt(row, 2).toString();
         String phone = model.getValueAt(row, 3).toString();
         String memberSince = model.getValueAt(row, 4).toString();
 
         ModernDialog dialog = new ModernDialog.Builder(this, "Edit Member", "Update member information")
             .addTextField("id", "Member ID (Cannot be changed)", id, false)
-            .addTextField("name", "Full Name", name, true)
+            .addTextField("firstName", "First Name", firstName, true)
+            .addTextField("lastName", "Last Name", lastName, true)
             .addTextField("email", "Email Address", email, true)
             .addTextField("phone", "Phone Number", phone, true)
             .addTextField("memberSince", "Member Since", memberSince, false)
@@ -240,7 +252,8 @@ public class Dashboard extends javax.swing.JFrame {
         if (dialog.showDialog()) {
             Member updatedMember = new Member(
                 id,
-                dialog.getTextFieldValue("name"),
+                dialog.getTextFieldValue("firstName"),
+                dialog.getTextFieldValue("lastName"),
                 dialog.getTextFieldValue("email"),
                 dialog.getTextFieldValue("phone"),
                 memberSince
@@ -521,7 +534,7 @@ public class Dashboard extends javax.swing.JFrame {
 
         java.util.List<String> memberOptions = new java.util.ArrayList<>();
         for (Member member : members) {
-            memberOptions.add(member.getName() + " (" + member.getId() + ")");
+            memberOptions.add(member.getFirstName() + " (" + member.getId() + ")");  // Only first name
         }
 
         if (memberOptions.isEmpty()) {
@@ -572,7 +585,7 @@ public class Dashboard extends javax.swing.JFrame {
                 Transaction transaction = new Transaction(
                     selectedBook.getTitle(),
                     selectedBook.getIsbn(),
-                    selectedMember.getName(),
+                    selectedMember.getFirstName(),  // ✅ Fixed - use getFirstName()
                     selectedMember.getId(),
                     issueDate,
                     dueDate,
@@ -971,7 +984,6 @@ public class Dashboard extends javax.swing.JFrame {
 private void searchMember() {
     String query = MemberSearchBar.getText().toLowerCase().trim();
     
-    // Don't search if it's just the placeholder text
     if (query.equals("search members...") || query.isEmpty()) {
         MemberTable.setRowSorter(null);
         return;
@@ -981,17 +993,17 @@ private void searchMember() {
     TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
     MemberTable.setRowSorter(sorter);
     
-    // Search across Member ID (0), Name (1), Email (2), Phone (3)
+    // Search across Member ID (0), Name (1) which contains "FirstName LastName", Email (2), Phone (3)
     RowFilter<DefaultTableModel, Object> rf = new RowFilter<DefaultTableModel, Object>() {
         @Override
         public boolean include(Entry<? extends DefaultTableModel, ? extends Object> entry) {
             String memberId = entry.getStringValue(0).toLowerCase();
-            String name = entry.getStringValue(1).toLowerCase();
+            String fullName = entry.getStringValue(1).toLowerCase();
             String email = entry.getStringValue(2).toLowerCase();
             String phone = entry.getStringValue(3).toLowerCase();
             
             return memberId.contains(query) || 
-                   name.contains(query) || 
+                   fullName.contains(query) || 
                    email.contains(query) || 
                    phone.contains(query);
         }

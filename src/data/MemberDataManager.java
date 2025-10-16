@@ -1,5 +1,4 @@
 //author @ian
-
 package data;
 
 import java.io.*;
@@ -20,9 +19,9 @@ public class MemberDataManager {
             List<String> lines = Files.readAllLines(file.toPath());
             for (String line : lines) {
                 String[] parts = line.split(",");
-                if (parts.length >= 4) {
-                    String existingEmail = parts[2];
-                    String existingPhone = parts[3];
+                if (parts.length >= 5) {  // Check email and phone for duplicates
+                    String existingEmail = parts[3];  // Updated index
+                    String existingPhone = parts[4];  // Updated index
                     if (existingEmail.equalsIgnoreCase(member.getEmail()) ||
                         existingPhone.equals(member.getPhone())) {
                         return false; // duplicate
@@ -34,7 +33,6 @@ public class MemberDataManager {
                 bw.write(member.toCsv());
                 bw.newLine();
             }
-
             return true;
         } catch (IOException e) {
             e.printStackTrace();
@@ -53,14 +51,23 @@ public class MemberDataManager {
             for (String line : lines) {
                 if (line.trim().isEmpty()) continue;
                 String[] parts = line.split(",");
-                if (parts.length >= 5) {
-                    members.add(new Member(parts[0], parts[1], parts[2], parts[3], parts[4]));
+                
+                // Handle both old format (5 fields) and new format (6 fields)
+                if (parts.length == 6) {
+                    // New format: id,firstName,lastName,email,phone,memberSince
+                    members.add(new Member(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5]));
+                } else if (parts.length == 5) {
+                    // Old format: id,name,email,phone,memberSince
+                    // Split the old "name" field into firstName and lastName
+                    String[] nameParts = parts[1].split(" ", 2);
+                    String firstName = nameParts[0];
+                    String lastName = nameParts.length > 1 ? nameParts[1] : "";
+                    members.add(new Member(parts[0], firstName, lastName, parts[2], parts[3], parts[4]));
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         return members;
     }
 
@@ -84,7 +91,6 @@ public class MemberDataManager {
             if (updated) {
                 saveAll(members);
             }
-
             return updated;
         } catch (Exception e) {
             e.printStackTrace();
@@ -104,7 +110,6 @@ public class MemberDataManager {
             if (removed) {
                 saveAll(members);
             }
-
             return removed;
         } catch (Exception e) {
             e.printStackTrace();
