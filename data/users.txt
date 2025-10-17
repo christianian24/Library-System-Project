@@ -4,3 +4,4 @@ student,fuft,trdyfdtyg,vutgfgvyutf@gmail.com,45606518951,123
 student,eros,morcilla,morcilla@gmail.com,48184105608,mahina
 student,Steaven,Siaton,steavensiaton@gmail.com,09666913100,mwaps
 student,ian,cabilen,christiancabilen925@gmail.com,09999999999,admin
+student,kian,chen,kian@gmail.com,09222222222,sin

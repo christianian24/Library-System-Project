@@ -454,63 +454,72 @@ public class CreateAccount extends javax.swing.JFrame {
     }//GEN-LAST:event_EmailActionPerformed
 
     private void CreateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CreateButtonActionPerformed
+                                         
                                           
-    String first = txtFirstname.getText().trim();
-    String last = Lastname.getText().trim();
-    String email = Email.getText().trim();
-    String mobile = Number.getText().trim();
-    String pass = new String(Password.getPassword());
-    String repass = new String(Repassword.getPassword());
+        String first = txtFirstname.getText().trim();
+        String last = Lastname.getText().trim();
+        String email = Email.getText().trim();
+        String mobile = Number.getText().trim();
+        String pass = new String(Password.getPassword());
+        String repass = new String(Repassword.getPassword());
 
-    // 🔸 Validation checks
-    if (first.isEmpty() || last.isEmpty() || email.isEmpty() || mobile.isEmpty() || pass.isEmpty() || repass.isEmpty()) {
-        util.ModernNotification.warning(this, "All fields are required!");
-        return;
-    }
+        // 🔸 Validation checks
+        if (first.isEmpty() || last.isEmpty() || email.isEmpty() || mobile.isEmpty() || pass.isEmpty() || repass.isEmpty()) {
+            util.ModernNotification.warning(this, "All fields are required!");
+            return;
+        }
 
-    if (!pass.equals(repass)) {
-        util.ModernNotification.warning(this, "Passwords do not match!");
-        return;
-    }
+        if (!pass.equals(repass)) {
+            util.ModernNotification.warning(this, "Passwords do not match!");
+            return;
+        }
 
-    if (!email.contains("@") || !email.contains(".")) {
-        util.ModernNotification.error(this, "Invalid email format!");
-        return;
-    }
+        if (!email.contains("@") || !email.contains(".")) {
+            util.ModernNotification.error(this, "Invalid email format!");
+            return;
+        }
 
-    if (mobile.length() != 11 || !mobile.matches("\\d+")) {
-        util.ModernNotification.warning(this, "Mobile number must be 11 digits.");
-        return;
-    }
+        if (mobile.length() != 11 || !mobile.matches("\\d+")) {
+            util.ModernNotification.warning(this, "Mobile number must be 11 digits.");
+            return;
+        }
 
-    // 🔸 Create a new User object
-    model.User user = new model.User("student", first, last, email, mobile, pass);
+        // 🔸 Create a new User object
+        model.User user = new model.User("student", first, last, email, mobile, pass);
 
-    // 🔸 Save user to file (users.txt)
-    boolean success = data.UserDataManager.addUser(user);
+        // ✅ ADD THESE DEBUG LINES HERE ✅
+        System.out.println("=== Creating User ===");
+        System.out.println("Email: '" + user.getEmail() + "'");
+        System.out.println("Mobile: '" + user.getMobile() + "'");
+        data.UserDataManager.printAllUsers();
+        // ✅ END DEBUG LINES ✅
 
-    if (success) {
-        util.ModernNotification.success(this, "Account created successfully!");
+        // 🔸 Save user to file (users.txt)
+        boolean success = data.UserDataManager.addUser(user);
 
-        // Reset fields
-        txtFirstname.setText("First name");
-        txtFirstname.setForeground(Color.GRAY);
-        Lastname.setText("Last name");
-        Lastname.setForeground(Color.GRAY);
-        Email.setText("Email");
-        Email.setForeground(Color.GRAY);
-        Number.setText("Mobile number");
-        Number.setForeground(Color.GRAY);
-        Password.setText("Enter Password");
-        Password.setForeground(Color.GRAY);
-        Password.setEchoChar((char) 0);
-        Repassword.setText("Confirm Password");
-        Repassword.setForeground(Color.GRAY);
-        Repassword.setEchoChar((char) 0);
+        if (success) {
+            util.ModernNotification.success(this, "Account created successfully!");
 
-    } else {
-        util.ModernNotification.error(this, "Account already exists!");
-    }
+            // Reset fields
+            txtFirstname.setText("First name");
+            txtFirstname.setForeground(Color.GRAY);
+            Lastname.setText("Last name");
+            Lastname.setForeground(Color.GRAY);
+            Email.setText("Email");
+            Email.setForeground(Color.GRAY);
+            Number.setText("Mobile number");
+            Number.setForeground(Color.GRAY);
+            Password.setText("Enter Password");
+            Password.setForeground(Color.GRAY);
+            Password.setEchoChar((char) 0);
+            Repassword.setText("Confirm Password");
+            Repassword.setForeground(Color.GRAY);
+            Repassword.setEchoChar((char) 0);
+
+        } else {
+            util.ModernNotification.error(this, "Account already exists!");
+        }
+    
 
     }//GEN-LAST:event_CreateButtonActionPerformed
 
